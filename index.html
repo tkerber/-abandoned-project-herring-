@@ -31,8 +31,9 @@ function initialize() {
   var path = drawPath(map, x, centerLatlng);
 }
 
-function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
-  drawPath(	new google.maps.LatLng(LatSchool, LongSchool),
+function drawPath(map, LatSchool, LongSchool, LatDataZone, LongDataZone) {
+  drawPath( map	
+			new google.maps.LatLng(LatSchool, LongSchool),
 			new google.maps.LatLng(LatDataZone, LongDataZone)
   );
 }
