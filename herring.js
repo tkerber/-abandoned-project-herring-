@@ -1,7 +1,8 @@
 var connsSparql = ([
-"SELECT ?pc ?school_lat ?school_long ?data_lat ?data_long ?strength",
+"SELECT ?email ?school_lat ?school_long ?data_lat ?data_long ?strength",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
+"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.",
 "  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.",
@@ -12,14 +13,15 @@ var connsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"ORDER BY ?pc"]).join("\n");
+"ORDER BY ?email"]).join("\n");
 
 var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
 var schoolsSparql = ([
-"SELECT ?pc ?lat ?long (SUM (?nop) as ?size) ?name",
+"SELECT ?email ?lat ?long (SUM (?nop) as ?size) ?name",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
+"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
 "  OPTIONAL{",
@@ -32,8 +34,8 @@ var schoolsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"GROUP BY ?pc ?lat ?long ?size ?name",
-"ORDER BY ?pc"]).join("\n");
+"GROUP BY ?email ?lat ?long ?size ?name",
+"ORDER BY ?email"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
@@ -49,7 +51,7 @@ $.ajax({
     for(var i = 1; i < data.length; i++){
       var row = data[i].split(',');
       schools.push({
-        'pc': row[0],
+        'email': row[0],
         'name': row[4],
         'latLong': new google.maps.LatLng(parseFloat(row[1]),
             parseFloat(row[2])),
@@ -67,10 +69,9 @@ $.ajax({
         var j = 0;
         for(var i = 1; i < data.length; i++){
           var row = data[i].split(',');
-          while(schools[j].pc != row[0])
+          while(schools[j].email != row[0])
             j++;
           schools[j].conns.push({
-            'pc': row[0],
             'latLong': new google.maps.LatLng(parseFloat(row[3]),
                 parseFloat(row[4])),
             'strength': parseInt(row[5])
