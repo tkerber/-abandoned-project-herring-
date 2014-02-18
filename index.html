@@ -16,7 +16,7 @@
     <script>
 
 var connsSparql = ([
-"SELECT ?school_lat ?school_long ?data_lat ?data_long ?strength",
+"SELECT ?pc ?school_lat ?school_long ?data_lat ?data_long ?strength",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
@@ -28,12 +28,13 @@ var connsSparql = ([
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
-"}"]).join("\n");
+"}",
+"ORDER BY ?pc"]).join("\n");
 
 var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
 var schoolsSparql = ([
-"SELECT ?lat ?long (SUM (?nop) as ?size) ?name",
+"SELECT ?pc ?lat ?long (SUM (?nop) as ?size) ?name",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
@@ -48,31 +49,14 @@ var schoolsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"GROUP BY ?lat ?long ?size ?name"]).join("\n");
+"GROUP BY ?pc ?lat ?long ?size ?name",
+"ORDER BY ?pc"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
 var conns = [];
 var schools = [];
 
-$.ajax({
-  dataType: 'text',
-  url: connsUrl,
-  success: function(data){
-    data = data.split("\n");
-    for(var i = 1; i < data.length; i++){
-      var row = data[i].split(',');
-      conns.push({
-        'schoolLatLong': new google.maps.LatLng(parseFloat(row[0]),
-            parseFloat(row[1])),
-        'zoneLatLong': new google.maps.LatLng(parseFloat(row[2]),
-            parseFloat(row[3])),
-        'strength': parseInt(row[4])
-      });
-    }
-    drawConns();
-  }
-});
 
 $.ajax({
   dataType: 'text',
@@ -82,13 +66,36 @@ $.ajax({
     for(var i = 1; i < data.length; i++){
       var row = data[i].split(',');
       schools.push({
-        'name': row[3],
-        'latLong': new google.maps.LatLng(parseFloat(row[0]),
-            parseFloat(row[1])),
-        'size': parseInt(row[2])
+        'pc': row[0],
+        'name': row[4],
+        'latLong': new google.maps.LatLng(parseFloat(row[1]),
+            parseFloat(row[2])),
+        'size': parseInt(row[3]),
+        'conns': []
       });
     }
     drawSchools();
+    
+    $.ajax({
+      dataType: 'text',
+      url: connsUrl,
+      success: function(data){
+        data = data.split("\n");
+        var j = 0;
+        for(var i = 1; i < data.length; i++){
+          var row = data[i].split(',');
+          while(schools[j].pc != row[0])
+            j++;
+          schools[j].conns.push({
+            'pc': row[0],
+            'latLong': new google.maps.LatLng(parseFloat(row[3]),
+                parseFloat(row[4])),
+            'strength': parseInt(row[5])
+          });
+        }
+        drawConns();
+      }
+    });
   }
 });
 
@@ -99,11 +106,14 @@ function drawSchools(data){
 }
 
 function drawConns(data){
-  for(var i = 0; i < conns.length; i++){
-    if(conns[i].strength < 10)
-      continue;
-    drawPath(map, conns[i].zoneLatLong, conns[i].schoolLatLong,
-        Math.min(1.0, (Math.log(conns[i].strength) - 2) / 2));
+  for(var i = 0; i < schools.length; i++){
+    for(var j = 0; j < schools[i].conns.length; j++){
+      var conn = schools[i].conns[j];
+      if(conn.strength < 10)
+        continue;
+      drawPath(map, conn.latLong, schools[i].latLong,
+          Math.min(1.0, (Math.log(conn.strength) - 2) / 2));
+    }
   }
 }
 var map;
