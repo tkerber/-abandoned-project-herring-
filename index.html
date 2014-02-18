@@ -15,27 +15,39 @@
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
     <script>
 
-var testsparql = "\
-SELECT ?school_lat ?school_long ?data_lat ?data_long ?strength \
-WHERE{\
-  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.\
-  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.\
-  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.\
-  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.\
-  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?data_long.\
-  ?nop <http://data.opendatascotland.org/def/education/numberOfPupils> ?strength.\
-  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.\
-  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.\
-  ?school <http://data.opendatascotland.org/def/education/department> ?dep.\
-  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.\
-}";
+var connsSparql = ([
+"SELECT ?school_lat ?school_long ?data_lat ?data_long ?strength",
+"WHERE{",
+"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?data_long.",
+"  ?nop <http://data.opendatascotland.org/def/education/numberOfPupils> ?strength.",
+"  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
+"  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
+"  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
+"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
+"}"]).join("\n");
 
-var sparqlurl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(testsparql);
+var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
+var schoolsUrl = ([
+"SELECT ?lat ?long (SUM (?nop) as ?size)",
+"WHERE{",
+"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
+"  GRAPH <http://data.opendatascotland.org/graph/education/pupils-by-school-and-datazone>{",
+"    ?x <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
+"    ?x <http://data.opendatascotland.org/def/education/numberOfPupils> ?nop.",
+"  }",
+"}",
+"GROUP BY ?lat ?long ?size"]).join("\n");
 
 $.ajax({
   dataType: 'text',
-  url: sparqlurl,
+  url: connsUrl,
   aync: false,
   success: function(data){
     data = data.split("\n");
@@ -77,7 +89,7 @@ function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
   );
 }
 
-function drawPath(map, LatLongDataZone, LatLongSchool, weight=1, opacity=1) {
+function drawPath(map, LatLongDataZone, LatLongSchool, weight, opacity) {
   var options = {
     path: [LatLongDataZone, LatLongSchool],
     strokeOpacity: opacity,
