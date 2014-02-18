@@ -105,6 +105,9 @@ function drawConns(data){
         Math.min(1.0, (Math.log(conns[i].strength) - 2) / 2));
   }
 }
+
+function drawArrow(map, zoneLatLong, schoolLatLong) {}
+
 var map;
 
 var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
@@ -182,10 +185,11 @@ function drawSchool(map, LatLongSchool, students, name) {
       position : circ.center });
   
   google.maps.event.addListener(circ, 'mouseover', function() {
-	    infowindow.open(map);
+	    if (map.getZoom() > 8) {
+	    	infowindow.open(map) }
 	  });
-
-  google.maps.event.addListener(circ, 'mouseout', function() {
+  
+    google.maps.event.addListener(circ, 'mouseout', function() {
 	    infowindow.close();
 	  });
   
