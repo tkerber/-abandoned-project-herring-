@@ -33,11 +33,12 @@ var connsSparql = ([
 var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
 var schoolsSparql = ([
-"SELECT ?lat ?long (SUM (?nop) as ?size)",
+"SELECT ?name ?lat ?long (SUM (?nop) as ?size)",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
+"  ?school <http://www.w3.org/2000/01/rdf-schema#label> ?name.",
 "  GRAPH <http://data.opendatascotland.org/graph/education/pupils-by-school-and-datazone>{",
 "    ?x <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
 "    ?x <http://data.opendatascotland.org/def/education/numberOfPupils> ?nop.",
@@ -45,17 +46,29 @@ var schoolsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"GROUP BY ?lat ?long ?size"]).join("\n");
+"GROUP BY ?name ?lat ?long ?size"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
+
+var conns = [];
+var schools = [];
 
 $.ajax({
   dataType: 'text',
   url: connsUrl,
   success: function(data){
     data = data.split("\n");
-    //console.log(data);
-    drawConns(data);
+    for(var i = 1; i < data.length; i++){
+      var row = data[i].split(',');
+      conns.push({
+        'schoolLatLong': new google.maps.LatLng(parseFloat(row[0]),
+            parseFloat(row[1])),
+        'zoneLatLong': new google.maps.LatLng(parseFloat(row[2]),
+            parseFloat(row[3])),
+        'strength': parseInt(row[4])
+      });
+    }
+    drawConns();
   }
 });
 
@@ -64,25 +77,32 @@ $.ajax({
   url: schoolsUrl,
   success: function(data){
     data = data.split("\n");
-    drawSchools(data);
+    for(var i = 1; i < data.length; i++){
+      var row = data[i].split(',');
+      schools.push({
+        'name': row[0],
+        'latLong': new google.maps.LatLng(parseFloat(row[1]),
+            parseFloat(row[2])),
+        'size': parseInt(row[3])
+      });
+    }
+    console.log(schools);
+    drawSchools();
   }
 });
 
 function drawSchools(data){
-  for(var i = 1; i < data.length; i++){
-    var row = data[i].split(',');
-    drawSchool(map, new google.maps.LatLng(parseFloat(row[0]), parseFloat(row[1])), parseInt(row[2]));
+  for(var i = 0; i < schools.length; i++){
+    drawSchool(map, schools[i].latLong, schools[i].size);
   }
 }
 
 function drawConns(data){
-  for(var i = 1; i < data.length; i++){
-    var row = data[i].split(',');
-    var str = parseInt(row[4]);
-    if(str <= 10)
+  for(var i = 0; i < conns.length; i++){
+    if(conns[i].strength < 10)
       continue;
-    str = Math.log(str);
-    drawPath(map, new google.maps.LatLng(parseFloat(row[2]), parseFloat(row[3])), new google.maps.LatLng(parseFloat(row[0]), parseFloat(row[1])), 1.0 , Math.min(1.0, (str - 2)/2));
+    drawPath(map, conns[i].zoneLatLong, conns[i].schoolLatLong,
+        Math.min(1.0, (Math.log(conns[i].strength) - 2) / 2));
   }
 }
 var map;
