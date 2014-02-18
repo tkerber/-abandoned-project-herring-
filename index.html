@@ -109,6 +109,11 @@ function drawConns(data){
 
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
 
+function distance(LatLog1, LatLog2) {
+	var dist = Math.pow(Math.pow((LatLog1.getLat() - LatLog2.getLat),2) + Math.pow(LatLog1.getLat() - LatLog2.getLat(),2), 1/2);
+	return dist
+ }
+
 var map;
   
 function initialize() {
