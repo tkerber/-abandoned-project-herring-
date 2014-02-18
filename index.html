@@ -93,7 +93,7 @@ $.ajax({
 
 function drawSchools(data){
   for(var i = 0; i < schools.length; i++){
-    drawSchool(map, schools[i].latLong, schools[i].size);
+    drawSchool(map, schools[i].latLong, schools[i].size, schools[i].name);
   }
 }
 
@@ -163,7 +163,7 @@ function drawSchool(map, LatSchool, LongSchool, students) {
   );
 }
 
-function drawSchool(map, LatLongSchool, students) {
+function drawSchool(map, LatLongSchool, students, name) {
   var options = {
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
@@ -176,6 +176,10 @@ function drawSchool(map, LatLongSchool, students) {
   };
   
   var circ = new google.maps.Circle(options);
+  
+  var infowindow = new google.maps.InfoWindow({
+      content: '<p><b>' + name + '</b></p>' ,
+      position : circ.center });
   
   google.maps.event.addListener(circ, 'mouseover', function() {
 	    infowindow.open(map);
