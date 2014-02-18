@@ -1,8 +1,7 @@
 var connsSparql = ([
-"SELECT ?email ?school_lat ?school_long ?data_lat ?data_long ?strength",
+"SELECT ?pc ?school_lat ?school_long ?data_lat ?data_long ?strength",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
-"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.",
 "  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.",
@@ -13,15 +12,14 @@ var connsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"ORDER BY ?email"]).join("\n");
+"ORDER BY ?pc"]).join("\n");
 
 var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
 var schoolsSparql = ([
-"SELECT ?email ?lat ?long (SUM (?nop) as ?size) ?name",
+"SELECT ?pc ?lat ?long (SUM (?nop) as ?size) ?name",
 "WHERE{",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
-"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
 "  OPTIONAL{",
@@ -34,8 +32,8 @@ var schoolsSparql = ([
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
 "}",
-"GROUP BY ?email ?lat ?long ?size ?name",
-"ORDER BY ?email"]).join("\n");
+"GROUP BY ?pc ?lat ?long ?size ?name",
+"ORDER BY ?pc"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
@@ -51,7 +49,7 @@ $.ajax({
     for(var i = 1; i < data.length; i++){
       var row = data[i].split(',');
       schools.push({
-        'email': row[0],
+        'pc': row[0],
         'name': row[4],
         'latLong': new google.maps.LatLng(parseFloat(row[1]),
             parseFloat(row[2])),
@@ -69,9 +67,10 @@ $.ajax({
         var j = 0;
         for(var i = 1; i < data.length; i++){
           var row = data[i].split(',');
-          while(schools[j].email != row[0])
+          while(schools[j].pc != row[0])
             j++;
           schools[j].conns.push({
+            'pc': row[0],
             'latLong': new google.maps.LatLng(parseFloat(row[3]),
                 parseFloat(row[4])),
             'strength': parseInt(row[5])
@@ -104,20 +103,36 @@ function drawConns(data){
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
 
 var map;
-  
+
+var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
+
+
 function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
   var mapOptions = {
     zoom: 7,
-    center: centerLatlng
+    center: centerLatlng ,
+    mapTypeControlOptions: {
+        mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+      }
   }
   
   var mapDiv = document.getElementById('map-canvas');
   map = new google.maps.Map(mapDiv, mapOptions);
-  
-  
+
+  map.setOptions({styles : mapStyles})
   var x = new google.maps.LatLng(-24.363882, 130.044922);
   
+  var defStyle = [{}]
+ 
+  var styledMap = new google.maps.StyledMapType(defStyle,
+{name: "Default"});
+  map.mapTypes.set('map_style', styledMap);
+  map.setMapTypeId('map_style');
+
+
+
+
 }
 
 function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
