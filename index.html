@@ -55,19 +55,32 @@ function drawConns(data){
   }
 }
 var map;
+
+var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
   
 function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
   var mapOptions = {
     zoom: 7,
-    center: centerLatlng
-  }
+    center: centerLatlng,
+    mapTypeControlOptions: {
+        mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+      }
+  };
   
   var mapDiv = document.getElementById('map-canvas');
   map = new google.maps.Map(mapDiv, mapOptions);
   
-  
+  map.setOptions({styles : mapStyles})
   var x = new google.maps.LatLng(-24.363882, 130.044922);
+  
+  var defStyle = [{}]
+ 
+  var styledMap = new google.maps.StyledMapType(defStyle,
+		    {name: "Default"});
+  map.mapTypes.set('map_style', styledMap);
+
+
   
 }
 
@@ -112,6 +125,15 @@ function drawSchool(map, LatLongSchool, students) {
   };
   
   var circ = new google.maps.Circle(options);
+  
+  google.maps.event.addListener(circ, 'mouseover', function() {
+	    infowindow.open(map);
+	  });
+
+  google.maps.event.addListener(circ, 'mouseout', function() {
+	    infowindow.close();
+	  });
+  
   return circ;
 }
 
