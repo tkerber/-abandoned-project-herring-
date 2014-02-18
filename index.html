@@ -170,16 +170,16 @@ function drawSchool(map, LatLongSchool, students, name) {
     strokeOpacity: 0.8,
     strokeWeight: 2,
     fillColor: '#FF0000',
-    fillOpacity: 0.35,
+    fillOpacity: 0.25,
     map: map,
     center: LatLongSchool,
-    radius: (Math.sqrt(students) * 10)
+    radius: (students * 0.5)
   };
   
   var circ = new google.maps.Circle(options);
   
   var infowindow = new google.maps.InfoWindow({
-      content: '<p><b>' + name + '</b></p>' ,
+      content: '<p><b>' + name +  '</b></p><p><b>' + "Enrolment: " + students +  '</b></p>',
       position : circ.center });
   
   google.maps.event.addListener(circ, 'mouseover', function() {
