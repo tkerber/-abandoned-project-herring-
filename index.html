@@ -116,6 +116,9 @@ function drawConns(data){
     }
   }
 }
+
+function drawArrow(map, zoneLatLong, schoolLatLong) {}
+
 var map;
   
 function initialize() {
@@ -180,10 +183,11 @@ function drawSchool(map, LatLongSchool, students, name) {
       position : circ.center });
   
   google.maps.event.addListener(circ, 'mouseover', function() {
-	    infowindow.open(map);
+	    if (map.getZoom() > 8) {
+	    	infowindow.open(map) }
 	  });
-
-  google.maps.event.addListener(circ, 'mouseout', function() {
+  
+    google.maps.event.addListener(circ, 'mouseout', function() {
 	    infowindow.close();
 	  });
   
