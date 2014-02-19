@@ -1,0 +1,12 @@
+Data zones should have point on the map.
+
+datazones.onMouseOver() :
+  show postcode
+  increase in size
+  
+school.onMouseOver() :
+  increase in size
+  show:
+    school name
+    number of pupils
+    postcode?
