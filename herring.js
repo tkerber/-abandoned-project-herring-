@@ -48,7 +48,7 @@ $.ajax({
   url: schoolsUrl,
   success: function(data){
     data = data.split("\n");
-    for(var i = 1; i < data.length; i++){
+    for(var i = 1; i < data.length - 1; i++){
       var row = data[i].split(',');
       schools.push({
         'email': row[0],
@@ -67,7 +67,7 @@ $.ajax({
       success: function(data){
         data = data.split("\n");
         var j = 0;
-        for(var i = 1; i < data.length; i++){
+        for(var i = 1; i < data.length - 1; i++){
           var row = data[i].split(',');
           while(schools[j].email != row[0])
             j++;
