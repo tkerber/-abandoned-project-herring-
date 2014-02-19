@@ -1,12 +1,12 @@
 var connsSparql = ([
-"SELECT ?email ?school_lat ?school_long ?data_lat ?data_long ?strength",
+"SELECT ?email ?lat ?long ?strength",
 "WHERE{",
-"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
 "  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?data_long.",
+"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?slat.",
+"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?slong.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
 "  ?nop <http://data.opendatascotland.org/def/education/numberOfPupils> ?strength.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
@@ -14,8 +14,6 @@ var connsSparql = ([
 "  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
 "}",
 "ORDER BY ?email"]).join("\n");
-
-var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
 
 var schoolsSparql = ([
 "SELECT ?email ?lat ?long (SUM (?nop) as ?size) ?name",
@@ -37,57 +35,64 @@ var schoolsSparql = ([
 "GROUP BY ?email ?lat ?long ?size ?name",
 "ORDER BY ?email"]).join("\n");
 
+var schools = {};
+
 var DEBUG = true;
-
-var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
-
-var schools = [];
 
 // schoolType one of "secondary", "primary", "pre-school"
 //do not call directly, called from "redraw()"
 function requestData(schoolType){
-  var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
-    encodeURIComponent(connsSparql) + "&stage=" +
-    encodeURIComponent(schoolType);
-  var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+  var schoolsUrl = "http://data.opendatascotland.org/sparql.json?query=" +
     encodeURIComponent(schoolsSparql) + "&stage=" +
     encodeURIComponent(schoolType);
   $.ajax({
     dataType: 'text',
     url: schoolsUrl,
     success: function(data){
-      data = data.split("\n");
-      for(var i = 1; i < data.length - 1; i++){
-        var row = data[i].split(',');
-        schools.push({
-          'email': row[0],
-          'name': row[4],
-          'latLong': new google.maps.LatLng(parseFloat(row[1]),
-              parseFloat(row[2])),
-          'size': parseInt(row[3]),
+      data = JSON.parse(data).results.bindings;
+      for(var i = 0; i < data.length - 1; i++){
+        schools[data[i].email.value] = {
+          'email': data[i].email.value,
+          'name': data[i].name ? data[i].name.value : null,
+          'latLong': new google.maps.LatLng(parseFloat(data[i].lat.value),
+              parseFloat(data[i].long.value)),
+          'size': parseInt(data[i].size.value),
           'conns': []
+        };
+      }
+      requestConnData(schoolType, 1);
+    }
+  });
+}
+
+function requestConnData(schoolType, page){
+  var connsUrl = "http://data.opendatascotland.org/sparql.json?query=" +
+    encodeURIComponent(connsSparql) + "&stage=" +
+    encodeURIComponent(schoolType) + "&per_page=10000&page=" + page;
+  $.ajax({
+    dataType: 'text',
+    url: connsUrl,
+    success: function(data){
+      var found = false;
+      data = JSON.parse(data).results.bindings;
+      if(data.length != 0)
+        found = true;
+      for(var i = 0; i < data.length - 1; i++){
+        if(!(data[i].email.value in schools))
+          continue;
+        schools[data[i].email.value].conns.push({
+          'latLong': new google.maps.LatLng(parseFloat(data[i].lat.value),
+              parseFloat(data[i].long.value)),
+          'strength': parseInt(data[i].strength.value)
         });
       }
-      $.ajax({
-        dataType: 'text',
-        url: connsUrl,
-        success: function(data){
-          data = data.split("\n");
-          var j = 0;
-          for(var i = 1; i < data.length - 1; i++){
-            var row = data[i].split(',');
-            while(schools[j].email != row[0])
-              j++;
-            schools[j].conns.push({
-              'latLong': new google.maps.LatLng(parseFloat(row[3]),
-                  parseFloat(row[4])),
-              'strength': parseInt(row[5])
-            });
-          }
-          drawConns();
-          drawSchools();
-        }
-      });
+      if(found){
+        requestConnData(schoolType, page + 1);
+      }
+      else{
+        drawConns();
+        drawSchools();
+      }
     }
   });
 }
@@ -124,32 +129,31 @@ redraw();
 
 //removed all currently drawing map objects.
 function clean() {
-  for(var i = 0; i < schools.length; i++){ 
-    schools[i].ui.circle.setMap(null);
-    schools[i].ui.infowindow.close();
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
+  for(var key in schools){ 
+    schools[key].ui.circle.setMap(null);
+    schools[key].ui.infowindow.close();
+    for(var j = 0; j < schools[key].conns.length; j++){
+      var conn = schools[key].conns[j];
       if(conn.ui)
-        schools[i].conns[j].ui.setMap(null);
+        schools[key].conns[j].ui.setMap(null);
     }
   }
   schools = [];
 }
 
 function drawSchools(data){
-var totStudents = 0;
-  for(var i = 0; i < schools.length; i++){
-    drawSchool(schools[i]);
+  for(var key in schools){
+    drawSchool(schools[key]);
   }
 }
 
 function drawConns(data){
-  for(var i = 0; i < schools.length; i++){
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
+  for(var key in schools){
+    for(var i = 0; i < schools[key].conns.length; i++){
+      var conn = schools[key].conns[i];
       if(conn.strength < 10)
         continue;
-      drawPath(schools[i], conn);
+      drawPath(schools[key], conn);
     }
   }
 }
