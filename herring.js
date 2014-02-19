@@ -84,9 +84,15 @@ $.ajax({
 });
 
 function drawSchools(data){
+var totStudents = 0;
   for(var i = 0; i < schools.length; i++){
     drawSchool(map, schools[i].latLong, schools[i].size, schools[i].name);
+	console.log(schools[i].name + "   " + schools[i].size);
+	if(schools[i].size > 0) {
+	  totStudents = totStudents + schools[i].size;
+	}
   }
+ alert(totStudents);
 }
 
 function drawConns(data){
@@ -97,8 +103,13 @@ function drawConns(data){
         continue;
       drawPath(map, conn.latLong, schools[i].latLong,
           Math.min(1.0, (Math.log(conn.strength) - 2) / 2));
+		
     }
   }
+}
+
+function drawZone(map, zoneLatLong){
+drawPoint
 }
 
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
