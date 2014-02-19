@@ -11,7 +11,7 @@ var connsSparql = ([
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
+"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
 "}",
 "ORDER BY ?email"]).join("\n");
 
@@ -32,65 +32,84 @@ var schoolsSparql = ([
 "    ?x <http://data.opendatascotland.org/def/education/numberOfPupils> ?nop.",
 "  }",
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
+"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
 "}",
 "GROUP BY ?email ?lat ?long ?size ?name",
 "ORDER BY ?email"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
-var conns = [];
 var schools = [];
 
 
-$.ajax({
-  dataType: 'text',
-  url: schoolsUrl,
-  success: function(data){
-    data = data.split("\n");
-    for(var i = 1; i < data.length - 1; i++){
-      var row = data[i].split(',');
-      schools.push({
-        'email': row[0],
-        'name': row[4],
-        'latLong': new google.maps.LatLng(parseFloat(row[1]),
-            parseFloat(row[2])),
-        'size': parseInt(row[3]),
-        'conns': []
+// schoolType one of "secondary", "primary", "pre-school"
+function requestData(schoolType){
+  clean();
+  var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+    encodeURIComponent(connsSparql) + "&stage=" +
+    encodeURIComponent(schoolType);
+  var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+    encodeURIComponent(schoolsSparql) + "&stage=" +
+    encodeURIComponent(schoolType);
+  $.ajax({
+    dataType: 'text',
+    url: schoolsUrl,
+    success: function(data){
+      data = data.split("\n");
+      for(var i = 1; i < data.length - 1; i++){
+        var row = data[i].split(',');
+        schools.push({
+          'email': row[0],
+          'name': row[4],
+          'latLong': new google.maps.LatLng(parseFloat(row[1]),
+              parseFloat(row[2])),
+          'size': parseInt(row[3]),
+          'conns': []
+        });
+      }
+      $.ajax({
+        dataType: 'text',
+        url: connsUrl,
+        success: function(data){
+          data = data.split("\n");
+          var j = 0;
+          for(var i = 1; i < data.length - 1; i++){
+            var row = data[i].split(',');
+            while(schools[j].email != row[0])
+              j++;
+            schools[j].conns.push({
+              'latLong': new google.maps.LatLng(parseFloat(row[3]),
+                  parseFloat(row[4])),
+              'strength': parseInt(row[5])
+            });
+          }
+          drawConns();
+          drawSchools();
+        }
       });
     }
-    drawSchools();
-    
-    $.ajax({
-      dataType: 'text',
-      url: connsUrl,
-      success: function(data){
-        data = data.split("\n");
-        var j = 0;
-        for(var i = 1; i < data.length - 1; i++){
-          var row = data[i].split(',');
-          while(schools[j].email != row[0])
-            j++;
-          schools[j].conns.push({
-            'latLong': new google.maps.LatLng(parseFloat(row[3]),
-                parseFloat(row[4])),
-            'strength': parseInt(row[5])
-          });
-        }
-        drawConns();
-      }
-    });
+  });
+}
+
+requestData("secondary");
+
+function clean(){
+  for(var i = 0; i < schools.length; i++){
+    schools[i].ui.circle.setMap(null);
+    schools[i].ui.infowindow.close();
+    for(var j = 0; j < schools[i].conns.length; j++){
+      var conn = schools[i].conns[j];
+      if(conn.ui)
+        schools[i].conns[j].ui.setMap(null);
+    }
   }
-});
+  schools = [];
+}
 
 function drawSchools(data){
 var totStudents = 0;
   for(var i = 0; i < schools.length; i++){
-    drawSchool(map, schools[i].latLong, schools[i].size, schools[i].name);
-	console.log(schools[i].name + "   " + schools[i].size);
-	if(schools[i].size > 0) {
-	  totStudents = totStudents + schools[i].size;
-	}
+    drawSchool(schools[i]);
   }
  alert(totStudents);
 }
@@ -101,9 +120,7 @@ function drawConns(data){
       var conn = schools[i].conns[j];
       if(conn.strength < 10)
         continue;
-      drawPath(map, conn.latLong, schools[i].latLong,
-          Math.min(1.0, (Math.log(conn.strength) - 2) / 2));
-		
+      drawPath(schools[i], conn);
     }
   }
 }
@@ -147,35 +164,21 @@ function initialize() {
 
 }
 
-function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
-  drawPath(map, new google.maps.LatLng(LatSchool, LongSchool),
-			new google.maps.LatLng(LatDataZone, LongDataZone)
-  );
-}
-
-function drawPath(map, LatLongDataZone, LatLongSchool, weight, opacity) {
+function drawPath(school, conn){
   var options = {
-    path: [LatLongDataZone, LatLongSchool],
-    strokeOpacity: opacity,
-    strokeWeight: weight,
+    path: [conn.latLong, school.latLong],
+    strokeOpacity: Math.min(1.0, (Math.log(conn.strength) - 2) / 2),
+    strokeWeight: 1.0,
     icons: [{
       offset: '100%'
     }],
     map: map
   };
   
-  var line = new google.maps.Polyline(options);
-  return line;
+  conn.ui = new google.maps.Polyline(options);
 } 
 
-function drawSchool(map, LatSchool, LongSchool, students) {
-  drawSchool(map,
-			 new google.maps.LatLng(LatSchool, LongSchool),
-			 students
-  );
-}
-
-function drawSchool(map, LatLongSchool, students, name) {
+function drawSchool(school){
   var options = {
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
@@ -183,26 +186,27 @@ function drawSchool(map, LatLongSchool, students, name) {
     fillColor: '#FF0000',
     fillOpacity: 0.25,
     map: map,
-    center: LatLongSchool,
-    radius: (students * 0.5)
+    center: school.latLong,
+    radius: (school.size * 0.5)
   };
   
   var circ = new google.maps.Circle(options);
+  school.ui = {
+    'circle': circ,
+    'infowindow': new google.maps.InfoWindow({
+      content: '<p><b>' + school.name + '</b></p><p><b>' + "Enrolment: " + school.size +  '</b></p>',
+      position: circ.center
+    })
+  }
   
-  var infowindow = new google.maps.InfoWindow({
-      content: '<p><b>' + name +  '</b></p><p><b>' + "Enrolment: " + students +  '</b></p>',
-      position : circ.center });
+  google.maps.event.addListener(school.ui.circle, 'mouseover', function() {
+    if (map.getZoom() > 8) {
+      school.ui.infowindow.open(map) }
+  });
   
-  google.maps.event.addListener(circ, 'mouseover', function() {
-	    if (map.getZoom() > 8) {
-	    	infowindow.open(map) }
-	  });
-  
-    google.maps.event.addListener(circ, 'mouseout', function() {
-	    infowindow.close();
-	  });
-  
-  return circ;
+  google.maps.event.addListener(school.ui.circle, 'mouseout', function() {
+    school.ui.infowindow.close();
+  });
 }
 
 //on load, run initialize
