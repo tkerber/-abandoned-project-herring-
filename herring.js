@@ -44,6 +44,7 @@ var schools = [];
 
 // schoolType one of "secondary", "primary", "pre-school"
 function requestData(schoolType){
+  clean();
   var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
     encodeURIComponent(connsSparql) + "&stage=" +
     encodeURIComponent(schoolType);
@@ -84,7 +85,6 @@ function requestData(schoolType){
           }
           drawConns();
           drawSchools();
-          clean();
         }
       });
     }
@@ -103,6 +103,7 @@ function clean(){
         schools[i].conns[j].ui.setMap(null);
     }
   }
+  schools = [];
 }
 
 function drawSchools(data){
