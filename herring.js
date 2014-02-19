@@ -112,6 +112,7 @@ function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
   var mapOptions = {
     zoom: 7,
+	disableDefaultUI: true,
     center: centerLatlng ,
     mapTypeControlOptions: {
         mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
@@ -131,10 +132,68 @@ function initialize() {
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
 
-
-
-
+  button("Show nursery schools", "Hide pre-schools", "green", "red", "Toggle pre-schools", google.maps.ControlPosition.RIGHT_TOP,
+  function() {
+  
+  }, function() {
+  
+  });
+  
+  button("Show primary schools", "Hide primary schools", "green", "red", "Toggle primary schools", google.maps.ControlPosition.RIGHT_TOP,
+  function() {
+  
+  }, function() {
+  
+  });
+  
+  button("Show high schools", "Hide secondary schools", "green", "red", "Toggle secondary schools", google.maps.ControlPosition.RIGHT_TOP,
+  function() {
+  
+  }, function() {
+  
+  });
 }
+
+function button(text, otherText, color, otherColor, info, position, first, second) {
+  var homeControlDiv = document.createElement('div');
+  var bc = new buttonControl(homeControlDiv, text, otherText, color, otherColor, info, first, second);
+  map.controls[position].push(homeControlDiv);  
+}
+
+function buttonControl(controlDiv, text, otherText, color, otherColor, info, first, second) {
+  controlDiv.style.padding = '5px';
+
+  var controlUI = document.createElement('div');
+  controlUI.style.backgroundColor = color;
+  controlUI.style.width = "160px";
+  controlUI.style.borderStyle = 'solid';
+  controlUI.style.borderWidth = '2px';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = info;
+  controlDiv.appendChild(controlUI);
+
+  var controlText = document.createElement('div');
+  controlText.style.fontFamily = 'Arial,sans-serif';
+  controlText.style.fontSize = '12px';
+  controlText.style.paddingLeft = '4px';
+  controlText.style.paddingRight = '4px';
+  controlText.innerHTML = text;
+  controlUI.appendChild(controlText);
+
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+    if(controlText.innerHTML == text) {
+	  controlText.innerHTML = otherText;
+      controlUI.style.backgroundColor = otherColor;
+	  first();
+	} else {
+	  controlText.innerHTML = text;
+	  controlUI.style.backgroundColor = color;
+	  second();
+	}
+  });
+}
+
 
 function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
   drawPath(map, new google.maps.LatLng(LatSchool, LongSchool),
@@ -179,7 +238,7 @@ function drawSchool(map, LatLongSchool, students, name) {
   var circ = new google.maps.Circle(options);
   
   var infowindow = new google.maps.InfoWindow({
-      content: '<p><b>' + name +  '</b></p><p><b>' + "Enrolment: " + students +  '</b></p>',
+      content: '<p><b>' + name +  '</b></p><p><b>' + "Students: " + students +  '</b></p>',
       position : circ.center });
   
   google.maps.event.addListener(circ, 'mouseover', function() {
