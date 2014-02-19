@@ -91,8 +91,8 @@ function requestData(schoolType){
   });
 }
 
-var showingPreSchools = true;
-var showingPrimarySchools = true;
+var showingPreSchools = false;
+var showingPrimarySchools = false;
 var showingSecondarySchools = true;
 
 //TODO make redraw hide and show objects rather than re-calling the database.
