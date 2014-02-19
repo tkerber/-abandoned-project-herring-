@@ -11,7 +11,7 @@ var connsSparql = ([
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
+"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
 "}",
 "ORDER BY ?email"]).join("\n");
 
@@ -32,56 +32,64 @@ var schoolsSparql = ([
 "    ?x <http://data.opendatascotland.org/def/education/numberOfPupils> ?nop.",
 "  }",
 "  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/secondary>.",
+"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
 "}",
 "GROUP BY ?email ?lat ?long ?size ?name",
 "ORDER BY ?email"]).join("\n");
 
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
-var conns = [];
 var schools = [];
 
 
-$.ajax({
-  dataType: 'text',
-  url: schoolsUrl,
-  success: function(data){
-    data = data.split("\n");
-    for(var i = 1; i < data.length - 1; i++){
-      var row = data[i].split(',');
-      schools.push({
-        'email': row[0],
-        'name': row[4],
-        'latLong': new google.maps.LatLng(parseFloat(row[1]),
-            parseFloat(row[2])),
-        'size': parseInt(row[3]),
-        'conns': []
-      });
-    }
-    drawSchools();
-    
-    $.ajax({
-      dataType: 'text',
-      url: connsUrl,
-      success: function(data){
-        data = data.split("\n");
-        var j = 0;
-        for(var i = 1; i < data.length - 1; i++){
-          var row = data[i].split(',');
-          while(schools[j].email != row[0])
-            j++;
-          schools[j].conns.push({
-            'latLong': new google.maps.LatLng(parseFloat(row[3]),
-                parseFloat(row[4])),
-            'strength': parseInt(row[5])
-          });
-        }
-        drawConns();
+function requestData(schoolType){
+  var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+    encodeURIComponent(connsSparql) + "&stage=" +
+    encodeURIComponent(schoolType);
+  var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+    encodeURIComponent(schoolsSparql) + "&stage=" +
+    encodeURIComponent(schoolType);
+  $.ajax({
+    dataType: 'text',
+    url: schoolsUrl,
+    success: function(data){
+      data = data.split("\n");
+      for(var i = 1; i < data.length - 1; i++){
+        var row = data[i].split(',');
+        schools.push({
+          'email': row[0],
+          'name': row[4],
+          'latLong': new google.maps.LatLng(parseFloat(row[1]),
+              parseFloat(row[2])),
+          'size': parseInt(row[3]),
+          'conns': []
+        });
       }
-    });
-  }
-});
+      $.ajax({
+        dataType: 'text',
+        url: connsUrl,
+        success: function(data){
+          data = data.split("\n");
+          var j = 0;
+          for(var i = 1; i < data.length - 1; i++){
+            var row = data[i].split(',');
+            while(schools[j].email != row[0])
+              j++;
+            schools[j].conns.push({
+              'latLong': new google.maps.LatLng(parseFloat(row[3]),
+                  parseFloat(row[4])),
+              'strength': parseInt(row[5])
+            });
+          }
+          drawConns();
+        }
+      });
+      drawSchools();
+    }
+  });
+}
+
+requestData("secondary");
 
 function drawSchools(data){
   for(var i = 0; i < schools.length; i++){
