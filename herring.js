@@ -141,6 +141,7 @@ function initialize() {
   var mapOptions = {
     zoom: 7,
     center: centerLatlng ,
+	disableDefaultUI:true,
     mapTypeControlOptions: {
         mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
       }
@@ -158,10 +159,8 @@ function initialize() {
 {name: "Default"});
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
-
-
-
-
+  
+  
 }
 
 function drawPath(school, conn){

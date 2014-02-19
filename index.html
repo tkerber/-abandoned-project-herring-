@@ -1,21 +1,41 @@
 <!DOCTYPE html>
 <html>
   <head>
+  
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <title>Simple markers</title>
     <style>
       html, body, #map-canvas {
+	  position: absolute;
         height: 100%;
-        margin: 0px;
-        padding: 0px
-      }
+		width: 100%;
+     	left: 0px;
+		top: 0px;
+		z-index: 1;
+	  }
+	  #tfheader{
+	  
+	 position: absolute;
+		left: 10px;
+		top: 10px;
+		z-index: 2;
+	  }
     </style>
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
     <script src="herring.js"></script>
   </head>
   <body>
+	<!-- HTML for SEARCH BAR -->
+	<div id="tfheader">
+		<form action="tfnewsearch" id="search_box">
+		        <input type="text" name="schoolsearch">
+				<input type="submit" value="Search">
+		</form>
+	<div class="tfclear"></div>
+	</div>
+
     <div id="map-canvas"></div>
   </body>
 </html>
