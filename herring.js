@@ -91,7 +91,26 @@ function requestData(schoolType){
   });
 }
 
-requestData("secondary");
+var showingPreSchools = true;
+var showingPrimarySchools = true;
+var showingSecondarySchools = true;
+
+//TODO make redraw hide and show objects rather than re-calling the database.
+function redraw() {
+  if(showingPreSchools) {
+    requestData("pre-school");
+  }
+  
+  if(showingPrimarySchools) {
+    requestData("primary");
+  }
+  
+  if(showingSecondarySchools) {
+    requestData("secondary");
+  }
+}
+
+redraw();
 
 function clean(){
   for(var i = 0; i < schools.length; i++){
@@ -111,7 +130,6 @@ var totStudents = 0;
   for(var i = 0; i < schools.length; i++){
     drawSchool(schools[i]);
   }
-
 }
 
 function drawConns(data){
@@ -126,7 +144,7 @@ function drawConns(data){
 }
 
 function drawZone(map, zoneLatLong){
-drawPoint
+  drawPoint
 }
 
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
@@ -151,48 +169,35 @@ function initialize() {
   map = new google.maps.Map(mapDiv, mapOptions);
 
   map.setOptions({styles : mapStyles})
-  var x = new google.maps.LatLng(-24.363882, 130.044922);
   
   var defStyle = [{}]
  
-  var styledMap = new google.maps.StyledMapType(defStyle,
-{name: "Default"});
+  var styledMap = new google.maps.StyledMapType(defStyle, {name: "Default"});
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
 
-  button("Show nursery schools", "Hide pre-schools", "green", "red", "Toggle pre-schools", google.maps.ControlPosition.RIGHT_TOP,
-  function() {
-  
-  }, function() {
-  
-  });
-  
-  button("Show primary schools", "Hide primary schools", "green", "red", "Toggle primary schools", google.maps.ControlPosition.RIGHT_TOP,
-  function() {
-  
-  }, function() {
-  
-  });
-  
-  button("Show high schools", "Hide secondary schools", "green", "red", "Toggle secondary schools", google.maps.ControlPosition.RIGHT_TOP,
-  function() {
-  
-  }, function() {
-  
-  });
+  button(" pre-", showingPreSchools);
+  button(" primary ", showingPrimarySchools);
+  button(" secondary ", showingSecondarySchools);
 }
 
-function button(text, otherText, color, otherColor, info, position, first, second) {
+function button(type, bool) {
   var homeControlDiv = document.createElement('div');
-  var bc = new buttonControl(homeControlDiv, text, otherText, color, otherColor, info, first, second);
-  map.controls[position].push(homeControlDiv);  
+  var bc = new buttonControl(homeControlDiv, type, bool);
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(homeControlDiv);  
 }
 
-function buttonControl(controlDiv, text, otherText, color, otherColor, info, first, second) {
+function buttonControl(controlDiv, type, bool) {
+  var startDrawing = "Show" + type + "schools";
+  var stopDrawing = "Hide" + type + "schools";
+  var info = "Toggle" + type + "schools";
+  var showColor = "green";
+  var hideColor = "red";
+  
   controlDiv.style.padding = '5px';
 
   var controlUI = document.createElement('div');
-  controlUI.style.backgroundColor = color;
+  controlUI.style.backgroundColor = bool ? hideColor : showColor;
   controlUI.style.width = "160px";
   controlUI.style.borderStyle = 'solid';
   controlUI.style.borderWidth = '2px';
@@ -206,19 +211,20 @@ function buttonControl(controlDiv, text, otherText, color, otherColor, info, fir
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
   controlText.style.paddingRight = '4px';
-  controlText.innerHTML = text;
+  controlText.innerHTML = bool ? stopDrawing : startDrawing;
   controlUI.appendChild(controlText);
 
   google.maps.event.addDomListener(controlUI, 'click', function() {
-    if(controlText.innerHTML == text) {
-	  controlText.innerHTML = otherText;
-      controlUI.style.backgroundColor = otherColor;
-	  first();
+	bool = !bool; //toggle the drawing state
+	
+    if(bool) { //if drawing
+	  controlText.innerHTML = stopDrawing; //set button text to "stop drawing"
+      controlUI.style.backgroundColor = hideColor;
 	} else {
-	  controlText.innerHTML = text;
-	  controlUI.style.backgroundColor = color;
-	  second();
+	  controlText.innerHTML = startDrawing; // set button text to "draw"
+	  controlUI.style.backgroundColor = showColor;
 	}
+	redraw(); //redraw all the schools
   });
 }
 
@@ -258,15 +264,11 @@ function drawSchool(school) {
   school.ui = {
     'circle': circ,
     'infowindow': new google.maps.InfoWindow({
-      content: '<p><b>' + school.name + '</b></p><p><b>' + "Enrolment: " + school.size +  '</b></p>',
+      content: '<p><b>' + school.name + '</b></p><p><b>' + "Students: " + school.size +  '</b></p>',
       position: circ.center
     })
   }
   
-  var infowindow = new google.maps.InfoWindow({
-      content: '<p><b>' + name +  '</b></p><p><b>' + "Students: " + students +  '</b></p>',
-      position : circ.center });
-
   google.maps.event.addListener(school.ui.circle, 'mouseover', function() {
     if (map.getZoom() > 8) {
       school.ui.infowindow.open(map) }
