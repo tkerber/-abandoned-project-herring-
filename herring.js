@@ -37,14 +37,16 @@ var schoolsSparql = ([
 "GROUP BY ?email ?lat ?long ?size ?name",
 "ORDER BY ?email"]).join("\n");
 
+var DEBUG = true;
+
 var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
 
 var schools = [];
 
 
 // schoolType one of "secondary", "primary", "pre-school"
+//do not call directly, called from "redraw()"
 function requestData(schoolType){
-  clean();
   var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
     encodeURIComponent(connsSparql) + "&stage=" +
     encodeURIComponent(schoolType);
@@ -91,29 +93,39 @@ function requestData(schoolType){
   });
 }
 
-var showingPreSchools = false;
-var showingPrimarySchools = false;
-var showingSecondarySchools = true;
+//boolean values as objects so that they are mutable form inside the button listener
+var showingPreSchools = {value: false};
+var showingPrimarySchools = {value: false};
+var showingSecondarySchools = {value: true};
 
 //TODO make redraw hide and show objects rather than re-calling the database.
 function redraw() {
-  if(showingPreSchools) {
+  clean(); //remove everything
+  
+  if(DEBUG) {
+	console.log("Showing Pre-Schools: " + showingPreSchools.value);
+	console.log("Showing Primary Schools: " + showingPrimarySchools.value);
+	console.log("Showing Secondary Schools: " + showingSecondarySchools.value);
+  }
+  
+  if(showingPreSchools.value) { //if supposed to be drawing; draw.
     requestData("pre-school");
   }
   
-  if(showingPrimarySchools) {
+  if(showingPrimarySchools.value) {
     requestData("primary");
   }
   
-  if(showingSecondarySchools) {
+  if(showingSecondarySchools.value) {
     requestData("secondary");
   }
 }
 
 redraw();
 
-function clean(){
-  for(var i = 0; i < schools.length; i++){
+//removed all currently drawing map objects.
+function clean() {
+  for(var i = 0; i < schools.length; i++){ 
     schools[i].ui.circle.setMap(null);
     schools[i].ui.infowindow.close();
     for(var j = 0; j < schools[i].conns.length; j++){
@@ -144,7 +156,7 @@ function drawConns(data){
 }
 
 function drawZone(map, zoneLatLong){
-  drawPoint
+  drawPoint //what this? //
 }
 
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
@@ -176,9 +188,9 @@ function initialize() {
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
 
-  button(" pre-", showingPreSchools);
-  button(" primary ", showingPrimarySchools);
-  button(" secondary ", showingSecondarySchools);
+  button(" Pre-", showingPreSchools);
+  button(" Primary ", showingPrimarySchools);
+  button(" Secondary ", showingSecondarySchools);
 }
 
 function button(type, bool) {
@@ -188,17 +200,17 @@ function button(type, bool) {
 }
 
 function buttonControl(controlDiv, type, bool) {
-  var startDrawing = "Show" + type + "schools";
-  var stopDrawing = "Hide" + type + "schools";
-  var info = "Toggle" + type + "schools";
+  var startDrawing = "Show" + type + "Schools";
+  var stopDrawing = "Hide" + type + "Schools";
+  var info = "Toggle" + type + "Schools";
   var showColor = "green";
   var hideColor = "red";
   
   controlDiv.style.padding = '5px';
 
   var controlUI = document.createElement('div');
-  controlUI.style.backgroundColor = bool ? hideColor : showColor;
-  controlUI.style.width = "160px";
+  controlUI.style.backgroundColor = bool.value ? hideColor : showColor;
+  controlUI.style.width = '160px';
   controlUI.style.borderStyle = 'solid';
   controlUI.style.borderWidth = '2px';
   controlUI.style.cursor = 'pointer';
@@ -211,13 +223,13 @@ function buttonControl(controlDiv, type, bool) {
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
   controlText.style.paddingRight = '4px';
-  controlText.innerHTML = bool ? stopDrawing : startDrawing;
+  controlText.innerHTML = bool.value ? stopDrawing : startDrawing;
   controlUI.appendChild(controlText);
 
   google.maps.event.addDomListener(controlUI, 'click', function() {
-	bool = !bool; //toggle the drawing state
+	bool.value = !bool.value; //toggle the drawing state
 	
-    if(bool) { //if drawing
+    if(bool.value) { //if drawing
 	  controlText.innerHTML = stopDrawing; //set button text to "stop drawing"
       controlUI.style.backgroundColor = hideColor;
 	} else {
