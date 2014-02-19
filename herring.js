@@ -43,7 +43,6 @@ var DEBUG = true;
 // schoolType one of "secondary", "primary", "pre-school"
 //do not call directly, called from "redraw()"
 function requestData(schoolType){
-  clean();
   var schoolsUrl = "http://data.opendatascotland.org/sparql.json?query=" +
     encodeURIComponent(schoolsSparql) + "&stage=" +
     encodeURIComponent(schoolType);
@@ -92,20 +91,11 @@ function requestConnData(schoolType, page){
         requestConnData(schoolType, page + 1);
       }
       else{
-        flattenSchools();
         drawConns();
         drawSchools();
       }
     }
   });
-}
-
-function flattenSchools(){
-  var arr = [];
-  for(var key in schools){
-    arr.push(schools[key]);
-  }
-  schools = arr;
 }
 
 //boolean values as objects so that they are mutable form inside the button listener
@@ -140,32 +130,31 @@ redraw();
 
 //removed all currently drawing map objects.
 function clean() {
-  for(var i = 0; i < schools.length; i++){ 
-    schools[i].ui.circle.setMap(null);
-    schools[i].ui.infowindow.close();
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
+  for(var key in schools){ 
+    schools[key].ui.circle.setMap(null);
+    schools[key].ui.infowindow.close();
+    for(var j = 0; j < schools[key].conns.length; j++){
+      var conn = schools[key].conns[j];
       if(conn.ui)
-        schools[i].conns[j].ui.setMap(null);
+        schools[key].conns[j].ui.setMap(null);
     }
   }
   schools = [];
 }
 
 function drawSchools(data){
-var totStudents = 0;
-  for(var i = 0; i < schools.length; i++){
-    drawSchool(schools[i]);
+  for(var key in schools){
+    drawSchool(schools[key]);
   }
 }
 
 function drawConns(data){
-  for(var i = 0; i < schools.length; i++){
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
+  for(var key in schools){
+    for(var i = 0; i < schools[key].conns.length; i++){
+      var conn = schools[key].conns[i];
       if(conn.strength < 10)
         continue;
-      drawPath(schools[i], conn);
+      drawPath(schools[key], conn);
     }
   }
 }
