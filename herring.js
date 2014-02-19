@@ -43,7 +43,6 @@ var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeUR
 
 var schools = [];
 
-
 // schoolType one of "secondary", "primary", "pre-school"
 //do not call directly, called from "redraw()"
 function requestData(schoolType){
@@ -167,7 +166,7 @@ var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "vis
 
 
 function initialize() {
-  var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
+  var centerLatlng = new google.maps.LatLng(56.632064, -3.729858); //The centre of Scotland
   var mapOptions = {
     zoom: 7,
 	disableDefaultUI: true,
@@ -276,7 +275,7 @@ function drawSchool(school) {
   school.ui = {
     'circle': circ,
     'infowindow': new google.maps.InfoWindow({
-      content: '<p><b>' + school.name + '</b></p><p><b>' + "Students: " + school.size +  '</b></p>',
+      content: '<p><b><u>' + school.name + "</u><br>Students: " + school.size +  '</b></p>',
       position: circ.center
     })
   }
