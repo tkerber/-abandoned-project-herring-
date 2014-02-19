@@ -111,7 +111,7 @@ var totStudents = 0;
   for(var i = 0; i < schools.length; i++){
     drawSchool(schools[i]);
   }
- alert(totStudents);
+
 }
 
 function drawConns(data){
