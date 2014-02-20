@@ -128,6 +128,7 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
+    console.log("hey");
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
@@ -139,9 +140,6 @@ function initialize() {
   redraw(); //draw all schools
   drawZones("Education");
 }
-
-//run the initialise function on load
-google.maps.event.addDomListener(window, 'load', initialize);
 
   
 function searchBar() {
