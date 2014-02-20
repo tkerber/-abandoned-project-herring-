@@ -32,11 +32,11 @@ WHERE{
 GROUP BY ?email ?lat ?long ?size ?name ?type
 ORDER BY ?email'
 
-ZONES_SPARQL = 'SELECT ?zone ?er ?lat ?long
+ZONES_SPARQL = 'SELECT ?zone ?%{type} ?lat ?long
 WHERE{
-  ?ere <http://data.opendatascotland.org/def/statistical-dimensions/refPeriod> <http://reference.data.gov.uk/id/year/2012>.
-  ?ere <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.
-  ?ere <http://data.opendatascotland.org/def/simd/educationRank> ?er.
+  ?ranktable <http://data.opendatascotland.org/def/statistical-dimensions/refPeriod> <http://reference.data.gov.uk/id/year/2012>.
+  ?ranktable <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.
+  ?ranktable <http://data.opendatascotland.org/def/simd/%{type}> ?%{type}.
   ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.
   ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.
 }'
@@ -44,13 +44,6 @@ WHERE{
 def sparql_to_url(sparql)
   url = 'http://data.opendatascotland.org/sparql.csv?query=' +
     URI::encode(sparql)
-end
-
-def dl_sparql_to(sparql, f)
-  c = open(sparql_to_url(sparql), &:read)
-  f = open(f, 'w')
-  f.write c
-  f.close
 end
 
 puts 'getting conns...'
@@ -75,7 +68,26 @@ while written
 end
 f.close
 puts 'getting schools...'
-dl_sparql_to(SCHOOLS_SPARQL, 'schools.csv')
+c = open(sparql_to_url(SCHOOLS_SPARQL), &:read)
+f = open('schools.csv', 'w')
+f.write c
+f.close
 puts 'getting zones...'
-dl_sparql_to(ZONES_SPARQL, 'zones.csv')
+zones = {}
+deprivation_types = ['crimeRank', 'educationRank', 'employmentRank', 'geographicAccessRank', 'healthRank', 'housingRank', 'incomeRank', 'rank']
+deprivation_types.each do |type|
+  puts "getting for deprivation type #{type}"
+  conn = open(sparql_to_url(ZONES_SPARQL.gsub('%{type}', type)))
+  conn.each_line do |l|
+    l = l.strip.split ','
+    zones[l[0]] = [l[2], l[3]] unless zones.include? l[0]
+    zones[l[0]] << l[1]
+  end
+  conn.close
+end
+f = open('zones.csv', 'w')
+zones.each do |zone, data|
+  f.puts (zone + ',' + data.join(','))
+end
+f.close
 puts 'done.'
