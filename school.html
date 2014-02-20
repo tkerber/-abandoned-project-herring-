@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>  
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>school</title>
+    <style>
+      
+    </style>
+	<!--
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="herring.js"></script>
+	-->
+  </head>
+  <body>
+    <p id="schoolName"></p>
+    <p id="pupils"></p>
+    <p id="postcode"></p>
+    <p id="latLong"></p>
+	
+	<script>
+	  /** @return A parameter from the URL query string */
+      function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+      }
+	  var code = getParameterByName('code'); //the email address of the school (unique identifier)
+	  
+	  var schoolInformation = null; // = getInformation(code);
+	  
+	  if(schoolInformation == null) {
+	    document.title = 'School not found';
+	    document.getElementById("schoolName").innerHTML = "<Strong>Can't find any information for school: " + code + "</strong>";
+	  } else {
+	    var schoolName = document.getElementById("schoolName");
+	    var pupils = document.getElementById("pupils");
+	    var postcode = document.getElementById("postcode");
+	    var latLong = document.getElementById("latLong");
+		
+	    document.title = schoolInformation.name;
+		schoolName.innerHTML = schoolInformation.name;
+		pupils.innerHTML = schoolInformation.pupils;
+		postcode.innerHTML = schoolInformation.postcode;
+		latLong.innerHTML = schoolInformation.latLong;
+	  }
+	</script>
+  </body>
+</html>
