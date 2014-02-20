@@ -27,6 +27,13 @@ function csvToArray(strData, strDelimiter){
 var schools = {};
 var dataZones = {};
 
+function DataZone(data){
+  this.educationRank = parseInt(data[1]);
+  this.latLong = new google.maps.LatLng(parseFloat(data[2]),
+    parseFloat(data[3]));
+  this.conns = [];
+}
+
 function School(data){
   this.email = data[0];
   this.name = data[4];
@@ -83,9 +90,8 @@ School.prototype.hide = function(){
 }
 
 function Connection(data){
-  this.latLong = new google.maps.LatLng(parseFloat(data[1]),
-    parseFloat(data[2]));
-  this.strength = parseInt(data[3]);
+  this.zone = dataZones[data[1]];
+  this.strength = parseInt(data[2]);
   this.school = schools[data[0]];
 }
 
@@ -93,7 +99,7 @@ Connection.prototype.draw = function(){
   if(this.ui || this.strength < 10)
     return;
   var options = {
-    path: [this.latLong, this.school.latLong],
+    path: [this.zone.latLong, this.school.latLong],
     strokeOpacity: Math.min(1.0, (Math.log(this.strength) - 2) / 2),
     strokeWeight: 1.0,
     icons: [{
@@ -117,14 +123,12 @@ Connection.prototype.hide = function(){
 
 
 var connsSparql = ([
-"SELECT ?email ?lat ?long ?strength",
+"SELECT ?email ?zone ?strength",
 "WHERE{",
 "  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
 "  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?slat.",
 "  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?slong.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
 "  ?nop <http://data.opendatascotland.org/def/education/numberOfPupils> ?strength.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
 "  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
@@ -151,11 +155,22 @@ var schoolsSparql = ([
 "GROUP BY ?email ?lat ?long ?size ?name ?type",
 "ORDER BY ?email"]).join("\n");
 
-// schoolType one of "secondary", "primary", "pre-school"
-//do not call directly, called from "redraw()"
+// zone crime rank, education rank, employment rank, geographic access rank,
+// health rank, housing rank, income rank, overall rank
+var zonesSparql = ([
+"SELECT ?zone ?er ?lat ?long",
+"WHERE{",
+"  ?ere <http://data.opendatascotland.org/def/statistical-dimensions/refPeriod> <http://reference.data.gov.uk/id/year/2012>.",
+"  ?ere <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
+"  ?ere <http://data.opendatascotland.org/def/simd/educationRank> ?er.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
+"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
+"}"]).join("\n");
+
 function requestData(){
   var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
     encodeURIComponent(schoolsSparql);
+  // Get school data.
   $.ajax({
     dataType: 'text',
     url: schoolsUrl,
@@ -164,12 +179,33 @@ function requestData(){
       for(var i = 1; i < data.length - 2; i++){
         schools[data[i][0]] = new School(data[i]);
       }
+      schoolsAcquired = true;
+      requestConnData(1);
+    }
+  });
+  var zonesUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
+    encodeURIComponent(zonesSparql);
+  // Get data zones data.
+  $.ajax({
+    dataType: 'text',
+    url: zonesUrl,
+    success: function(data){
+      data = csvToArray(data);
+      for(var i = 1; i < data.length - 2; i++){
+        dataZones[data[i][0]] = new DataZone(data[i]);
+      }
+      dataZonesAcquired = true;
       requestConnData(1);
     }
   });
 }
 
+var schoolsAcquired = false;
+var dataZonesAcquired = false;
+
 function requestConnData(page){
+  if(!(schoolsAcquired && dataZonesAcquired))
+    return;
   var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
     encodeURIComponent(connsSparql) + "&per_page=10000&page=" + page;
   $.ajax({
@@ -181,9 +217,11 @@ function requestConnData(page){
       if(data.length > 2)
         found = true;
       for(var i = 1; i < data.length - 2; i++){
-        if(!(data[i][0] in schools))
+        if(!(data[i][0] in schools && data[i][1] in dataZones))
           continue;
-        schools[data[i][0]].conns.push(new Connection(data[i]));
+        var conn = new Connection(data[i]);
+        schools[data[i][0]].conns.push(conn);
+        dataZones[data[i][1]].conns.push(conn);
       }
       if(found){
         requestConnData(page + 1);
