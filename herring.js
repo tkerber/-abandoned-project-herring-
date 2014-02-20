@@ -91,7 +91,26 @@ function requestData(schoolType){
   });
 }
 
-requestData("secondary");
+var showingPreSchools = false;
+var showingPrimarySchools = false	;
+var showingSecondarySchools = true;
+
+//TODO make redraw hide and show objects rather than re-calling the database.
+function redraw() {
+  if(showingPreSchools) {
+    requestData("pre-school");
+  }
+  
+  if(showingPrimarySchools) {
+    requestData("primary");
+  }
+  
+  if(showingSecondarySchools) {
+    requestData("secondary");
+  }
+}
+
+redraw();
 
 function clean(){
   for(var i = 0; i < schools.length; i++){
@@ -111,7 +130,6 @@ var totStudents = 0;
   for(var i = 0; i < schools.length; i++){
     drawSchool(schools[i]);
   }
-
 }
 
 function drawConns(data){
@@ -126,7 +144,7 @@ function drawConns(data){
 }
 
 function drawZone(map, zoneLatLong){
-drawPoint
+  drawPoint
 }
 
 function drawArrow(map, zoneLatLong, schoolLatLong) {}
@@ -140,6 +158,7 @@ function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
   var mapOptions = {
     zoom: 7,
+	disableDefaultUI: true,
     center: centerLatlng ,
 	disableDefaultUI:true,
     mapTypeControlOptions: {
@@ -151,19 +170,140 @@ function initialize() {
   map = new google.maps.Map(mapDiv, mapOptions);
 
   map.setOptions({styles : mapStyles})
-  var x = new google.maps.LatLng(-24.363882, 130.044922);
+  
+  var defaultBounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(61.037012, -9.294434),
+      new google.maps.LatLng(55.788929, 0.780029));
   
   var defStyle = [{}]
- 
-  var styledMap = new google.maps.StyledMapType(defStyle,
-{name: "Default"});
+  var markers = [];
+  var styledMap = new google.maps.StyledMapType(defStyle, {name: "Default"});
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
+
+
+  button(" pre-", showingPreSchools);
+  button(" primary ", showingPrimarySchools);
+  button(" secondary ", showingSecondarySchools);
   
+  var input = /** @type {HTMLInputElement} */(
+      document.getElementById('pac-input'));
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
   
+    var searchBox = new google.maps.places.SearchBox(
+    /** @type {HTMLInputElement} */(input));
+
+  // [START region_getplaces]
+  // Listen for the event fired when the user selects an item from the
+  // pick list. Retrieve the matching places for that item.
+  google.maps.event.addListener(searchBox, 'places_changed', function() {
+ 
+   var places = searchBox.getPlaces();
+
+    for (var i = 0, marker; marker = markers[i]; i++) {
+      marker.setMap(null);
+    }
+
+    // For each place, get the icon, place name, and location.
+    markers = [];
+    var bounds = new google.maps.LatLngBounds();
+     for (var i = 0, place; place = places[i]; i++) {
+      var image = {
+        url: place.icon,
+        size: new google.maps.Size(71, 71),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(17, 34),
+        scaledSize: new google.maps.Size(25, 25)
+      };
+
+      // Create a marker for each place.
+      var marker = new google.maps.Marker({
+        map: map,
+        icon: image,
+        title: place.name,
+        position: place.geometry.location
+      }); 
+
+      markers.push(marker);
+
+
+      bounds.extend(place.geometry.location);
+    }
+
+    map.fitBounds(bounds);
+  });
+  // [END region_getplaces]
+
+  // Bias the SearchBox results towards places that are within the bounds of the
+  // current map's viewport.
+ /* google.maps.event.addListener(map, 'bounds_changed', function() {
+    var bounds = (new google.maps.LatLng(61.037012, -9.294434),
+      new google.maps.LatLng(55.788929, 0.780029));
+    searchBox.setBounds(bounds);
+  }); */
 }
 
-function drawPath(school, conn){
+google.maps.event.addDomListener(window, 'load', initialize);
+
+  
+
+
+function button(type, bool) {
+  var homeControlDiv = document.createElement('div');
+  var bc = new buttonControl(homeControlDiv, type, bool);
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(homeControlDiv);  
+}
+
+function buttonControl(controlDiv, type, bool) {
+  var startDrawing = "Show" + type + "schools";
+  var stopDrawing = "Hide" + type + "schools";
+  var info = "Toggle" + type + "schools";
+  var showColor = "green";
+  var hideColor = "red";
+  
+  controlDiv.style.padding = '5px';
+
+  var controlUI = document.createElement('div');
+  controlUI.style.backgroundColor = bool ? hideColor : showColor;
+  controlUI.style.width = "160px";
+
+  controlUI.style.borderStyle = 'solid';
+  controlUI.style.borderWidth = '2px';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = info;
+  controlDiv.appendChild(controlUI);
+
+  var controlText = document.createElement('div');
+  controlText.style.fontFamily = 'Arial,sans-serif';
+  controlText.style.fontSize = '12px';
+  controlText.style.paddingLeft = '4px';
+  controlText.style.paddingRight = '4px';
+  controlText.innerHTML = bool ? stopDrawing : startDrawing;
+  controlUI.appendChild(controlText);
+
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+	bool = !bool; //toggle the drawing state
+	
+    if(bool) { //if drawing
+	  controlText.innerHTML = stopDrawing; //set button text to "stop drawing"
+      controlUI.style.backgroundColor = hideColor;
+	} else {
+	  controlText.innerHTML = startDrawing; // set button text to "draw"
+	  controlUI.style.backgroundColor = showColor;
+	}
+	redraw(); //redraw all the schools
+  });
+}
+
+function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
+  drawPath(map, new google.maps.LatLng(LatSchool, LongSchool),
+			new google.maps.LatLng(LatDataZone, LongDataZone)
+  );
+
+}
+
+function drawPath(school, conn) {
   var options = {
     path: [conn.latLong, school.latLong],
     strokeOpacity: Math.min(1.0, (Math.log(conn.strength) - 2) / 2),
@@ -177,7 +317,7 @@ function drawPath(school, conn){
   conn.ui = new google.maps.Polyline(options);
 } 
 
-function drawSchool(school){
+function drawSchool(school) {
   var options = {
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
@@ -193,7 +333,7 @@ function drawSchool(school){
   school.ui = {
     'circle': circ,
     'infowindow': new google.maps.InfoWindow({
-      content: '<p><b>' + school.name + '</b></p><p><b>' + "Enrolment: " + school.size +  '</b></p>',
+      content: '<p><b>' + school.name + '</b></p><p><b>' + "Students: " + school.size +  '</b></p>',
       position: circ.center
     })
   }
