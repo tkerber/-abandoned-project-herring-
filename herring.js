@@ -65,23 +65,26 @@ function testZones() {
 
 //Accepts the arguments Overall, Crime, Education, Income, Employment, Health and Housing
 function drawZones(type) {
-	for (var i = 0 ; i < zones.length ; i++) {
+	for (var key in dataZones) {
+		numZones++ ;
+	}
+	for (var key in dataZones) {
 		switch (type) {
-		case "Crime" : drawZone(zones[i], zones[i].rank.crime);
+		case "Crime" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Education" : drawZone(zones[i], zones[i].rank.education);
+		case "Education" : drawZone(dataZones[key], dataZones[key].educationRank);
 		    break;
-		case "Income" : drawZone(zones[i], zones[i].rank.income);
+		case "Income" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Employment" : drawZone(zones[i], zones[i].rank.employment);
+		case "Employment" : drawZone(dataZones[key], dataZones[key].educationRank);
 		    break;
-		case "Overall" : drawZone(zones[i], zones[i].rank.overall);
+		case "Overall" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Health" : drawZone(zones[i], zones[i].rank.health);
+		case "Health" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Housing" : drawZone(zones[i], zones[i].rank.housing);
+		case "Housing" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		default : drawZone(zones[i], zones[i].rank.education);
+		default : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
 		}
 	}
@@ -132,7 +135,9 @@ function initialize() {
     }
   }
   
+  
   redraw(); //draw all schools
+  drawZones("Education");
 }
   
 function searchBar() {
@@ -238,19 +243,19 @@ function buttonControl(controlDiv, type, bool) {
   });
 }
 
-var numZones = 6000;
+var numZones = 0
 
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
 function drawZone(zone, rank) {
 	  var options = {
-	    strokeColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    strokeColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
 	    strokeOpacity: 0.8,
 	    strokeWeight: 2,
-	    fillColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    fillColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
 	    fillOpacity: 0.8,
 	    map: map,
 	    center: zone.latLong,
-	    radius: 500
+	    radius: 100
 	  };
 	  var circ = new google.maps.Circle(options);
 	  zone.ui = {
