@@ -66,27 +66,7 @@ function testZones() {
 //Accepts the arguments Overall, Crime, Education, Income, Employment, Health and Housing
 function drawZones(type) {
 	for (var key in dataZones) {
-		numZones++ ;
-	}
-	for (var key in dataZones) {
-		switch (type) {
-		case "Crime" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Education" : drawZone(dataZones[key], dataZones[key].educationRank);
-		    break;
-		case "Income" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Employment" : drawZone(dataZones[key], dataZones[key].educationRank);
-		    break;
-		case "Overall" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Health" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Housing" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		default : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		}
+    dataZones[key].draw(type);
 	}
 }
 
@@ -134,9 +114,11 @@ function initialize() {
       schools[key].conns[i].draw();
     }
   }
+  for(var key in dataZones)
+    numZones++;
   
   redraw(); //draw all schools
-  drawZones("Education");
+  drawZones("education");
 }
   
 function searchBar() {
@@ -245,35 +227,5 @@ function buttonControl(controlDiv, type, bool) {
 var numZones = 0
 
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
-function drawZone(zone, rank) {
-	  var options = {
-	    strokeColor: rgbByRank(rank),
-	    strokeOpacity: 0.8,
-	    strokeWeight: 2,
-	    fillColor: rgbByRank(rank),
-	    fillOpacity: 0.8,
-	    map: map,
-	    center: zone.latLong,
-	    radius: 100
-	  };
-	  var circ = new google.maps.Circle(options);
-	  zone.ui = {
-			  'circle' : circ
-	  };
-}
 
-function rgbByRank(rank) {
-	var green = 0;
-	var red = 0;
-	var blue = 0;
-	if (2*rank/numZones < 1) {
-		green = Math.floor(2*255*(rank/numZones));
-		red = 255
-	}
-	else {
-		green = 255 ;
-		red = 2*Math.floor(255 - 255*(rank/numZones)) ;
-	}
-	return ('rgb(' + red + ',' + green + ',' + blue + ')') ;
-}
 var openInfoWindow = null;

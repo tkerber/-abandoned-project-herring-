@@ -42,6 +42,39 @@ function DataZone(data){
   this.conns = [];
 }
 
+function rgbByRank(rank) {
+	var green = 0;
+	var red = 0;
+	var blue = 0;
+	if (2*rank/numZones < 1) {
+		green = Math.floor(2*255*(rank/numZones));
+		red = 255
+	}
+	else {
+		green = 255 ;
+		red = 2*Math.floor(255 - 255*(rank/numZones)) ;
+	}
+	return ('rgb(' + red + ',' + green + ',' + blue + ')') ;
+}
+
+DataZone.prototype.draw = function(type){
+  if(this.ui)
+    this.ui.setMap(null);
+  var rank = this[type + 'Rank'];
+  var options = {
+    strokeColor: rgbByRank(rank),
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: rgbByRank(rank),
+    fillOpacity: 0.8,
+    map: map,
+    center: this.latLong,
+    radius: 100
+  };
+  var circ = new google.maps.Circle(options);
+  this.ui = circ;
+}
+
 function School(data){
   this.email = data[0];
   this.name = data[4];
