@@ -1,161 +1,56 @@
-var connsSparql = ([
-"SELECT ?email ?school_lat ?school_long ?data_lat ?data_long ?strength",
-"WHERE{",
-"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
-"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?school_lat.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?school_long.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?data_lat.",
-"  ?zone <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?data_long.",
-"  ?nop <http://data.opendatascotland.org/def/education/numberOfPupils> ?strength.",
-"  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
-"  ?nop <http://data.opendatascotland.org/def/statistical-dimensions/refArea> ?zone.",
-"  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
-"}",
-"ORDER BY ?email"]).join("\n");
+//DEBUG boolean, should debug console prints be shown
+var DEBUG = true;
 
-var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(connsSparql);
+//boolean values as objects so that they are mutable form inside the button listener
+var showingPrimarySchools = {value: false};
+var showingSecondarySchools = {value: true};
 
-var schoolsSparql = ([
-"SELECT ?email ?lat ?long (SUM (?nop) as ?size) ?name",
-"WHERE{",
-"  ?school <http://data.ordnancesurvey.co.uk/ontology/postcode/postcode> ?pc.",
-"  ?school <http://www.w3.org/2006/vcard/ns#hasEmail> ?email.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat.",
-"  ?pc <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long.",
-"  OPTIONAL{",
-"    ?school <http://www.w3.org/2000/01/rdf-schema#label> ?name",
-"  }",
-"  GRAPH <http://data.opendatascotland.org/graph/education/pupils-by-school-and-datazone>{",
-"    ?x <http://data.opendatascotland.org/def/statistical-dimensions/education/school> ?school.",
-"    ?x <http://data.opendatascotland.org/def/education/numberOfPupils> ?nop.",
-"  }",
-"  ?school <http://data.opendatascotland.org/def/education/department> ?dep.",
-"  ?dep <http://data.opendatascotland.org/def/education/stageOfEducation> <http://data.opendatascotland.org/def/concept/education/stages-of-education/%{stage}>.",
-"}",
-"GROUP BY ?email ?lat ?long ?size ?name",
-"ORDER BY ?email"]).join("\n");
-
-var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" + encodeURIComponent(schoolsSparql);
-
-var schools = [];
-
-
-// schoolType one of "secondary", "primary", "pre-school"
-function requestData(schoolType){
-  clean();
-  var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
-    encodeURIComponent(connsSparql) + "&stage=" +
-    encodeURIComponent(schoolType);
-  var schoolsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
-    encodeURIComponent(schoolsSparql) + "&stage=" +
-    encodeURIComponent(schoolType);
-  $.ajax({
-    dataType: 'text',
-    url: schoolsUrl,
-    success: function(data){
-      data = data.split("\n");
-      for(var i = 1; i < data.length - 1; i++){
-        var row = data[i].split(',');
-        schools.push({
-          'email': row[0],
-          'name': row[4],
-          'latLong': new google.maps.LatLng(parseFloat(row[1]),
-              parseFloat(row[2])),
-          'size': parseInt(row[3]),
-          'conns': []
-        });
-      }
-      $.ajax({
-        dataType: 'text',
-        url: connsUrl,
-        success: function(data){
-          data = data.split("\n");
-          var j = 0;
-          for(var i = 1; i < data.length - 1; i++){
-            var row = data[i].split(',');
-            while(schools[j].email != row[0])
-              j++;
-            schools[j].conns.push({
-              'latLong': new google.maps.LatLng(parseFloat(row[3]),
-                  parseFloat(row[4])),
-              'strength': parseInt(row[5])
-            });
-          }
-          drawConns();
-          drawSchools();
-        }
-      });
-    }
-  });
-}
-
-var showingPreSchools = false;
-var showingPrimarySchools = false	;
-var showingSecondarySchools = true;
-
-//TODO make redraw hide and show objects rather than re-calling the database.
 function redraw() {
-  if(showingPreSchools) {
-    requestData("pre-school");
+  clean(); //remove everything
+  
+  if(DEBUG) {
+	console.log("Showing Primary Schools: " + showingPrimarySchools.value);
+	console.log("Showing Secondary Schools: " + showingSecondarySchools.value);
+  }
+
+  if(showingPrimarySchools.value) { //if supposed to be drawing; draw.
+    draw("primary");
   }
   
-  if(showingPrimarySchools) {
-    requestData("primary");
-  }
-  
-  if(showingSecondarySchools) {
-    requestData("secondary");
+  if(showingSecondarySchools.value) {
+    draw("secondary");
   }
 }
 
-redraw();
-
-function clean(){
-  for(var i = 0; i < schools.length; i++){
-    schools[i].ui.circle.setMap(null);
-    schools[i].ui.infowindow.close();
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
-      if(conn.ui)
-        schools[i].conns[j].ui.setMap(null);
-    }
-  }
-  schools = [];
-}
-
-function drawSchools(data){
-var totStudents = 0;
-  for(var i = 0; i < schools.length; i++){
-    drawSchool(schools[i]);
-  }
-}
-
-function drawConns(data){
-  for(var i = 0; i < schools.length; i++){
-    for(var j = 0; j < schools[i].conns.length; j++){
-      var conn = schools[i].conns[j];
-      if(conn.strength < 10)
-        continue;
-      drawPath(schools[i], conn);
+//draw all schools of the given type
+//types "secondary", "primary"
+function draw(type) {
+  for(var key in schools){
+    if(schools[key].type == type){
+      schools[key].show();
+      for(var i = 0; i < schools[key].conns.length; i++)
+        schools[key].conns[i].show();
     }
   }
 }
 
-function drawZone(map, zoneLatLong){
-  drawPoint
+// hide everything
+function clean() {
+  for(var key in schools){
+    schools[key].hide();
+    for(var i =0; i < schools[key].conns.length; i++){
+      schools[key].conns[i].hide();
+    }
+  }
 }
 
-function drawArrow(map, zoneLatLong, schoolLatLong) {}
-
-var map;
+var map; //holds the map
 
 var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
 
-
+//called on load
 function initialize() {
-  var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
+  var centerLatlng = new google.maps.LatLng(56.632064, -3.729858); //The centre of Scotland
   var mapOptions = {
     zoom: 7,
 	disableDefaultUI: true,
@@ -167,47 +62,60 @@ function initialize() {
   }
   
   var mapDiv = document.getElementById('map-canvas');
-  map = new google.maps.Map(mapDiv, mapOptions);
+  map = new google.maps.Map(mapDiv, mapOptions); //create the map
 
-  map.setOptions({styles : mapStyles})
+  map.setOptions({styles : mapStyles});
   
   var defaultBounds = new google.maps.LatLngBounds(
       new google.maps.LatLng(61.037012, -9.294434),
       new google.maps.LatLng(55.788929, 0.780029));
   
-  var defStyle = [{}]
+  var defStyle = [{}];
   var markers = [];
+  
   var styledMap = new google.maps.StyledMapType(defStyle, {name: "Default"});
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
 
-
-  button(" pre-", showingPreSchools);
-  button(" primary ", showingPrimarySchools);
-  button(" secondary ", showingSecondarySchools);
+  searchBar(); //do all actions related to the search bar
   
-  var input = /** @type {HTMLInputElement} */(
-      document.getElementById('pac-input'));
+  button(" Primary ", showingPrimarySchools);
+  button(" Secondary ", showingSecondarySchools);
+
+  for(var key in schools){
+    schools[key].draw();
+    for(var i = 0; i < schools[key].conns.length; i++){
+      schools[key].conns[i].draw();
+    }
+  }
+  
+  redraw(); //draw all schools
+}
+
+//run the initialise function on load
+google.maps.event.addDomListener(window, 'load', initialize);
+
+  
+function searchBar() {
+  var input = (document.getElementById('pac-input'));
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
   
-    var searchBox = new google.maps.places.SearchBox(
-    /** @type {HTMLInputElement} */(input));
+  var searchBox = new google.maps.places.SearchBox(input);
 
-  // [START region_getplaces]
   // Listen for the event fired when the user selects an item from the
   // pick list. Retrieve the matching places for that item.
   google.maps.event.addListener(searchBox, 'places_changed', function() {
  
-   var places = searchBox.getPlaces();
+  var places = searchBox.getPlaces();
 
-    for (var i = 0, marker; marker = markers[i]; i++) {
-      marker.setMap(null);
-    }
-
-    // For each place, get the icon, place name, and location.
-    markers = [];
-    var bounds = new google.maps.LatLngBounds();
-     for (var i = 0, place; place = places[i]; i++) {
+  for (var i = 0, marker; marker = markers[i]; i++) {
+    marker.setMap(null);
+  }
+  
+  //For each place, get the icon, place name, and location.
+  markers = [];
+  var bounds = new google.maps.LatLngBounds();
+    for (var i = 0, place; place = places[i]; i++) {
       var image = {
         url: place.icon,
         size: new google.maps.Size(71, 71),
@@ -226,27 +134,19 @@ function initialize() {
 
       markers.push(marker);
 
-
       bounds.extend(place.geometry.location);
     }
 
     map.fitBounds(bounds);
   });
-  // [END region_getplaces]
 
-  // Bias the SearchBox results towards places that are within the bounds of the
-  // current map's viewport.
- /* google.maps.event.addListener(map, 'bounds_changed', function() {
+  //Bias the SearchBox results towards places that are within the bounds of the current map's viewport.
+  google.maps.event.addListener(map, 'bounds_changed', function() {
     var bounds = (new google.maps.LatLng(61.037012, -9.294434),
       new google.maps.LatLng(55.788929, 0.780029));
     searchBox.setBounds(bounds);
-  }); */
+  });
 }
-
-google.maps.event.addDomListener(window, 'load', initialize);
-
-  
-
 
 function button(type, bool) {
   var homeControlDiv = document.createElement('div');
@@ -255,18 +155,19 @@ function button(type, bool) {
 }
 
 function buttonControl(controlDiv, type, bool) {
-  var startDrawing = "Show" + type + "schools";
-  var stopDrawing = "Hide" + type + "schools";
-  var info = "Toggle" + type + "schools";
+  //button names and colours
+  var startDrawing = "Show" + type + "Schools";
+  var stopDrawing = "Hide" + type + "Schools";
+  var info = "Toggle" + type + "Schools";
   var showColor = "green";
   var hideColor = "red";
   
+  //setting the visual variables -->
   controlDiv.style.padding = '5px';
 
   var controlUI = document.createElement('div');
-  controlUI.style.backgroundColor = bool ? hideColor : showColor;
-  controlUI.style.width = "160px";
-
+  controlUI.style.backgroundColor = bool.value ? hideColor : showColor;
+  controlUI.style.width = '160px';
   controlUI.style.borderStyle = 'solid';
   controlUI.style.borderWidth = '2px';
   controlUI.style.cursor = 'pointer';
@@ -279,13 +180,14 @@ function buttonControl(controlDiv, type, bool) {
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
   controlText.style.paddingRight = '4px';
-  controlText.innerHTML = bool ? stopDrawing : startDrawing;
+  controlText.innerHTML = bool.value ? stopDrawing : startDrawing;
   controlUI.appendChild(controlText);
-
+  // <--
+  
   google.maps.event.addDomListener(controlUI, 'click', function() {
-	bool = !bool; //toggle the drawing state
+	bool.value = !bool.value; //toggle the drawing state
 	
-    if(bool) { //if drawing
+    if(bool.value) { //if drawing
 	  controlText.innerHTML = stopDrawing; //set button text to "stop drawing"
       controlUI.style.backgroundColor = hideColor;
 	} else {
@@ -296,58 +198,4 @@ function buttonControl(controlDiv, type, bool) {
   });
 }
 
-function drawPath(LatSchool, LongSchool, LatDataZone, LongDataZone) {
-  drawPath(map, new google.maps.LatLng(LatSchool, LongSchool),
-			new google.maps.LatLng(LatDataZone, LongDataZone)
-  );
-
-}
-
-function drawPath(school, conn) {
-  var options = {
-    path: [conn.latLong, school.latLong],
-    strokeOpacity: Math.min(1.0, (Math.log(conn.strength) - 2) / 2),
-    strokeWeight: 1.0,
-    icons: [{
-      offset: '100%'
-    }],
-    map: map
-  };
-  
-  conn.ui = new google.maps.Polyline(options);
-} 
-
-function drawSchool(school) {
-  var options = {
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.8,
-    strokeWeight: 2,
-    fillColor: '#FF0000',
-    fillOpacity: 0.25,
-    map: map,
-    center: school.latLong,
-    radius: (school.size * 0.5)
-  };
-  
-  var circ = new google.maps.Circle(options);
-  school.ui = {
-    'circle': circ,
-    'infowindow': new google.maps.InfoWindow({
-      content: '<p><b>' + school.name + '</b></p><p><b>' + "Students: " + school.size +  '</b></p>',
-      position: circ.center
-    })
-  }
-  
-  google.maps.event.addListener(school.ui.circle, 'mouseover', function() {
-    if (map.getZoom() > 8) {
-      school.ui.infowindow.open(map) }
-  });
-  
-  google.maps.event.addListener(school.ui.circle, 'mouseout', function() {
-    school.ui.infowindow.close();
-  });
-}
-
-//on load, run initialize
-google.maps.event.addDomListener(window, 'load', initialize);
-
+var openInfoWindow = null;
