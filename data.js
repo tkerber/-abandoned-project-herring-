@@ -26,6 +26,7 @@ function csvToArray(strData, strDelimiter){
 }
 var schools = {};
 var dataZones = {};
+var typePrefix = "http://data.opendatascotland.org/def/concept/education/stages-of-education/";
 
 function DataZone(data){
   this.educationRank = parseInt(data[1]);
@@ -37,10 +38,11 @@ function DataZone(data){
 function School(data){
   this.email = data[0];
   this.name = data[4];
-  this.latLong = new google.maps.LatLng(parseFloat(data[1]),
-    parseFloat(data[2]));
+  this.lat = parseFloat(data[1]);
+  this.lng = parseFloat(data[2]);
+  this.latLong = new google.maps.LatLng(lat, lng);
   this.size = parseInt(data[3]);
-  this.type = data[5];
+  this.type = data[5].replace(typePrefix, "");
   this.conns = [];
 }
 
@@ -62,7 +64,9 @@ School.prototype.draw = function(){
   this.ui = {
     'circle': circ,
     'infowindow': new google.maps.InfoWindow({
-      content: '<p><b><u>' + this.name + "</u><br>Students: " + this.size +  '</b></p>',
+      content: '<p><b><u>' + this.name + "</u>" + 
+	  "<br>Type: " + this.type + 
+	  "<br>Students: " + this.size + '</b></p>',
       position: circ.center
     })
   };
