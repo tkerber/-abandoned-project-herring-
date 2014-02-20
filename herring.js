@@ -263,6 +263,8 @@ function drawPath(school, conn) {
   conn.ui = new google.maps.Polyline(options);
 } 
 
+var openInfoWindow = null;
+
 function drawSchool(school) {
   var options = {
     strokeColor: '#FF0000',
@@ -285,13 +287,20 @@ function drawSchool(school) {
   }
   
   google.maps.event.addListener(school.ui.circle, 'mouseover', function() {
-    if (map.getZoom() > 8) {
-      school.ui.infowindow.open(map) }
+    if(openInfoWindow != null) {
+	  openInfoWindow.close();
+    }
+	
+	if (map.getZoom() > 8) {
+	  openInfoWindow = school.ui.infowindow;
+	  openInfoWindow.open(map);
+	  
+	}
   });
-  
+  /*
   google.maps.event.addListener(school.ui.circle, 'mouseout', function() {
     school.ui.infowindow.close();
-  });
+  });*/
 }
 
 //on load, run initialize
