@@ -251,18 +251,34 @@ var numZones = 0
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
 function drawZone(zone, rank) {
 	  var options = {
-	    strokeColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
+	    strokeColor: rgbByRank(rank),
 	    strokeOpacity: 0.8,
 	    strokeWeight: 2,
-	    fillColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
+	    fillColor: rgbByRank(rank),
 	    fillOpacity: 0.8,
 	    map: map,
 	    center: zone.latLong,
 	    radius: 100
 	  };
+	  console.log(strokeColor) ;
 	  var circ = new google.maps.Circle(options);
 	  zone.ui = {
 			  'circle' : circ
 	  };
+}
+
+function rgbByRank(rank) {
+	var green = 0;
+	var red = 0;
+	var blue = 0;
+	if (2*rank/numZones < 1) {
+		green = Math.floor(2*255*(rank/numZones));
+		red = 255
+	}
+	else {
+		green = 255 ;
+		red = 2*Math.floor(255 - 255*(rank/numZones)) ;
+	}
+	return ('rbg(' + red + ',' + green + ',' + blue + ')') ;
 }
 var openInfoWindow = null;
