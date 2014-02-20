@@ -134,30 +134,27 @@ function initialize() {
   
   redraw(); //draw all schools
 }
-
-//run the initialise function on load
-google.maps.event.addDomListener(window, 'load', initialize);
-
   
 function searchBar() {
+  var markers = [];
   var input = (document.getElementById('pac-input'));
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-  
+
   var searchBox = new google.maps.places.SearchBox(input);
 
   // Listen for the event fired when the user selects an item from the
   // pick list. Retrieve the matching places for that item.
   google.maps.event.addListener(searchBox, 'places_changed', function() {
- 
-  var places = searchBox.getPlaces();
+    var places = searchBox.getPlaces();
 
-  for (var i = 0, marker; marker = markers[i]; i++) {
-    marker.setMap(null);
-  }
+    for (var i = 0, marker; marker = markers[i]; i++) {
+      marker.setMap(null);
+    }
   
-  //For each place, get the icon, place name, and location.
-  markers = [];
-  var bounds = new google.maps.LatLngBounds();
+    //For each place, get the icon, place name, and location.
+    markers = [];
+    var bounds = new google.maps.LatLngBounds();
+  
     for (var i = 0, place; place = places[i]; i++) {
       var image = {
         url: place.icon,
@@ -176,8 +173,7 @@ function searchBar() {
       }); 
 
       markers.push(marker);
-
-      bounds.extend(place.geometry.location);
+	  bounds.extend(place.geometry.location);
     }
 
     map.fitBounds(bounds);
@@ -185,8 +181,8 @@ function searchBar() {
 
   //Bias the SearchBox results towards places that are within the bounds of the current map's viewport.
   google.maps.event.addListener(map, 'bounds_changed', function() {
-    var bounds = (new google.maps.LatLng(61.037012, -9.294434),
-      new google.maps.LatLng(55.788929, 0.780029));
+    var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(61.037012, -9.294434),
+											  new google.maps.LatLng(55.788929, 0.780029));
     searchBox.setBounds(bounds);
   });
 }
@@ -237,11 +233,12 @@ function buttonControl(controlDiv, type, bool) {
 	  controlText.innerHTML = startDrawing; // set button text to "draw"
 	  controlUI.style.backgroundColor = showColor;
 	}
+	
 	redraw(); //redraw all the schools
   });
 }
 
-var numZones = 6000
+var numZones = 6000;
 
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
 function drawZone(zone, rank) {
