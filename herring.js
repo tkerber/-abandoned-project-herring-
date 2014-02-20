@@ -204,8 +204,8 @@ function buttonControl(controlDiv, type, bool) {
   var startDrawing = "Show" + type + "Schools";
   var stopDrawing = "Hide" + type + "Schools";
   var info = "Toggle" + type + "Schools";
-  var showColor = "green";
-  var hideColor = "red";
+  var showColor = "#99FF66";
+  var hideColor = "#CCCCA3";
   
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
@@ -214,7 +214,7 @@ function buttonControl(controlDiv, type, bool) {
   controlUI.style.backgroundColor = bool.value ? hideColor : showColor;
   controlUI.style.width = '160px';
   controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '2px';
+  controlUI.style.borderWidth = '1px';
   controlUI.style.cursor = 'pointer';
   controlUI.style.textAlign = 'center';
   controlUI.title = info;
