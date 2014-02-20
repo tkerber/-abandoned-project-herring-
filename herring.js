@@ -25,9 +25,8 @@ function redraw() {
 //draw all schools of the given type
 //types "secondary", "primary"
 function draw(type) {
-  var prefix = "http://data.opendatascotland.org/def/concept/education/stages-of-education/";
   for(var key in schools){
-    if(schools[key].type == prefix + type){
+    if(schools[key].type == type){
       schools[key].show();
       for(var i = 0; i < schools[key].conns.length; i++)
         schools[key].conns[i].show();
