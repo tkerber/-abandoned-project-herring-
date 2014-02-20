@@ -40,7 +40,7 @@ function School(data){
   this.name = data[4];
   this.lat = parseFloat(data[1]);
   this.lng = parseFloat(data[2]);
-  this.latLong = new google.maps.LatLng(lat, lng);
+  this.latLong = new google.maps.LatLng(this.lat, this.lng);
   this.size = parseInt(data[3]);
   this.type = data[5].replace(typePrefix, "");
   this.conns = [];
