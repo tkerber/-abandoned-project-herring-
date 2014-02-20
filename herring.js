@@ -65,23 +65,26 @@ function testZones() {
 
 //Accepts the arguments Overall, Crime, Education, Income, Employment, Health and Housing
 function drawZones(type) {
-	for (var i = 0 ; i < zones.length ; i++) {
+	for (var key in dataZones) {
+		numZones++ ;
+	}
+	for (var key in dataZones) {
 		switch (type) {
-		case "Crime" : drawZone(zones[i], zones[i].rank.crime);
+		case "Crime" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Education" : drawZone(zones[i], zones[i].rank.education);
+		case "Education" : drawZone(dataZones[key], dataZones[key].educationRank);
 		    break;
-		case "Income" : drawZone(zones[i], zones[i].rank.income);
+		case "Income" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Employment" : drawZone(zones[i], zones[i].rank.employment);
+		case "Employment" : drawZone(dataZones[key], dataZones[key].educationRank);
 		    break;
-		case "Overall" : drawZone(zones[i], zones[i].rank.overall);
+		case "Overall" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Health" : drawZone(zones[i], zones[i].rank.health);
+		case "Health" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		case "Housing" : drawZone(zones[i], zones[i].rank.housing);
+		case "Housing" : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
-		default : drawZone(zones[i], zones[i].rank.education);
+		default : drawZone(dataZones[key], dataZones[key].educationRank);
 			break;
 		}
 	}
@@ -125,6 +128,7 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
+    console.log("hey");
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
@@ -132,32 +136,31 @@ function initialize() {
     }
   }
   
+  
   redraw(); //draw all schools
+  drawZones("Education");
 }
-
-//run the initialise function on load
-google.maps.event.addDomListener(window, 'load', initialize);
-
   
 function searchBar() {
+  var markers = [];
   var input = (document.getElementById('pac-input'));
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-  
+
   var searchBox = new google.maps.places.SearchBox(input);
 
   // Listen for the event fired when the user selects an item from the
   // pick list. Retrieve the matching places for that item.
   google.maps.event.addListener(searchBox, 'places_changed', function() {
- 
-  var places = searchBox.getPlaces();
+    var places = searchBox.getPlaces();
 
-  for (var i = 0, marker; marker = markers[i]; i++) {
-    marker.setMap(null);
-  }
+    for (var i = 0, marker; marker = markers[i]; i++) {
+      marker.setMap(null);
+    }
   
-  //For each place, get the icon, place name, and location.
-  markers = [];
-  var bounds = new google.maps.LatLngBounds();
+    //For each place, get the icon, place name, and location.
+    markers = [];
+    var bounds = new google.maps.LatLngBounds();
+  
     for (var i = 0, place; place = places[i]; i++) {
 	alert();
       var image = {
@@ -177,8 +180,7 @@ function searchBar() {
       }); 
 
       markers.push(marker);
-
-      bounds.extend(place.geometry.location);
+	  bounds.extend(place.geometry.location);
     }
 
     map.fitBounds(bounds);
@@ -186,8 +188,8 @@ function searchBar() {
 
   //Bias the SearchBox results towards places that are within the bounds of the current map's viewport.
   google.maps.event.addListener(map, 'bounds_changed', function() {
-    var bounds = (new google.maps.LatLng(61.037012, -9.294434),
-      new google.maps.LatLng(55.788929, 0.780029));
+    var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(61.037012, -9.294434),
+											  new google.maps.LatLng(55.788929, 0.780029));
     searchBox.setBounds(bounds);
   });
 }
@@ -238,23 +240,24 @@ function buttonControl(controlDiv, type, bool) {
 	  controlText.innerHTML = startDrawing; // set button text to "draw"
 	  controlUI.style.backgroundColor = showColor;
 	}
+	
 	redraw(); //redraw all the schools
   });
 }
 
-var numZones = 6000
+var numZones = 0
 
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
 function drawZone(zone, rank) {
 	  var options = {
-	    strokeColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    strokeColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
 	    strokeOpacity: 0.8,
 	    strokeWeight: 2,
-	    fillColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    fillColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
 	    fillOpacity: 0.8,
 	    map: map,
 	    center: zone.latLong,
-	    radius: 500
+	    radius: 100
 	  };
 	  var circ = new google.maps.Circle(options);
 	  zone.ui = {
