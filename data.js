@@ -58,8 +58,6 @@ function rgbByRank(rank) {
 }
 
 DataZone.prototype.draw = function(type){
-  if(this.ui)
-    this.ui.setMap(null);
   var rank = this[type + 'Rank'];
   var options = {
     strokeColor: rgbByRank(rank),
@@ -71,8 +69,12 @@ DataZone.prototype.draw = function(type){
     center: this.latLong,
     radius: 100
   };
-  var circ = new google.maps.Circle(options);
-  this.ui = circ;
+  if(this.ui)
+    this.ui.setOptions(options);
+  else{
+    var circ = new google.maps.Circle(options);
+    this.ui = circ;
+  }
 }
 
 function School(data){
