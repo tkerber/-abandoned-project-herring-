@@ -128,14 +128,12 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
-    console.log("hey");
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
       schools[key].conns[i].draw();
     }
   }
-  
   
   redraw(); //draw all schools
   drawZones("Education");
