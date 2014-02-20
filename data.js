@@ -58,15 +58,16 @@ School.prototype.draw = function(){
       content: '<p><b><u>' + this.name + "</u><br>Students: " + this.size +  '</b></p>',
       position: circ.center
     })
-  }
+  };
   
+  var this_ = this;
   google.maps.event.addListener(this.ui.circle, 'mouseover', function() {
     if(openInfoWindow != null) {
       openInfoWindow.close();
     }
     
     if(map.getZoom() > 8){
-      openInfoWindow = this.ui.infowindow;
+      openInfoWindow = this_.ui.infowindow;
       openInfoWindow.open(map);
     }
   });
@@ -160,7 +161,6 @@ function requestData(){
     url: schoolsUrl,
     success: function(data){
       data = csvToArray(data);
-      console.log(data);
       for(var i = 1; i < data.length - 2; i++){
         schools[data[i][0]] = new School(data[i]);
       }
@@ -170,7 +170,6 @@ function requestData(){
 }
 
 function requestConnData(page){
-  console.log("reqConn");
   var connsUrl = "http://data.opendatascotland.org/sparql.csv?query=" +
     encodeURIComponent(connsSparql) + "&per_page=10000&page=" + page;
   $.ajax({
@@ -179,7 +178,6 @@ function requestConnData(page){
     success: function(data){
       var found = false;
       data = csvToArray(data);
-      console.log(data);
       if(data.length > 2)
         found = true;
       for(var i = 1; i < data.length - 2; i++){
