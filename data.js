@@ -55,18 +55,20 @@ School.prototype.draw = function(){
   this.ui = {
     'circle': circ,
     'infowindow': new google.maps.InfoWindow({
-      content: '<p><b>' + this.name + '</b></p><p><b>' + "Students: " + this.size +  '</b></p>',
+      content: '<p><b><u>' + this.name + "</u><br>Students: " + this.size +  '</b></p>',
       position: circ.center
     })
   }
   
   google.maps.event.addListener(this.ui.circle, 'mouseover', function() {
-    if (map.getZoom() > 8) {
-      this.ui.infowindow.open(map) }
-  });
-  
-  google.maps.event.addListener(this.ui.circle, 'mouseout', function() {
-    this.ui.infowindow.close();
+    if(openInfoWindow != null) {
+      openInfoWindow.close();
+    }
+    
+    if(map.getZoom() > 8){
+      openInfoWindow = this.ui.infowindow;
+      openInfoWindow.open(map);
+    }
   });
 }
 

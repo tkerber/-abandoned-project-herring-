@@ -2,7 +2,6 @@
 var DEBUG = true;
 
 
-
 //boolean values as objects so that they are mutable form inside the button listener
 var showingPreSchools = {value: false};
 var showingPrimarySchools = {value: false};
@@ -62,7 +61,7 @@ var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "vis
 
 
 function initialize() {
-  var centerLatlng = new google.maps.LatLng(56.632064,-3.729858);
+  var centerLatlng = new google.maps.LatLng(56.632064, -3.729858); //The centre of Scotland
   var mapOptions = {
     zoom: 7,
 	disableDefaultUI: true,
@@ -143,6 +142,5 @@ function buttonControl(controlDiv, type, bool) {
   });
 }
 
-//on load, run initialize
-//google.maps.event.addDomListener(window, 'load', initialize);
+var openInfoWindow = null;
 
