@@ -44,6 +44,49 @@ function clean() {
   }
 }
 
+var zones = []
+
+function testZones() {
+	zones.push({
+		"ui" : null,
+		"latLong" : new google.maps.LatLng(56.632064, -3.729858),
+		"rank" : {
+			"income" : 100,
+			"crime" : 6505,
+			"education" : 1,
+			"employment" : 1000,
+			"health" : 2000,
+			"overall" : 3000,
+			"housing" : 4000
+		}
+	});
+	drawZones("Education");
+}
+
+//Accepts the arguments Overall, Crime, Education, Income, Employment, Health and Housing
+function drawZones(type) {
+	for (var i = 0 ; i < zones.length ; i++) {
+		switch (type) {
+		case "Crime" : drawZone(zones[i], zones[i].rank.crime);
+			break;
+		case "Education" : drawZone(zones[i], zones[i].rank.education);
+		    break;
+		case "Income" : drawZone(zones[i], zones[i].rank.income);
+			break;
+		case "Employment" : drawZone(zones[i], zones[i].rank.employment);
+		    break;
+		case "Overall" : drawZone(zones[i], zones[i].rank.overall);
+			break;
+		case "Health" : drawZone(zones[i], zones[i].rank.health);
+			break;
+		case "Housing" : drawZone(zones[i], zones[i].rank.housing);
+			break;
+		default : drawZone(zones[i], zones[i].rank.education);
+			break;
+		}
+	}
+}
+
 var map; //holds the map
 
 var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
@@ -198,4 +241,23 @@ function buttonControl(controlDiv, type, bool) {
   });
 }
 
+var numZones = 6000
+
+//Draws a zone with a colour that scales from Green to Red depending on the rank supplied
+function drawZone(zone, rank) {
+	  var options = {
+	    strokeColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    strokeOpacity: 0.8,
+	    strokeWeight: 2,
+	    fillColor: 'rgb(' + 0 + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + Math.round(255*(rank/numZones)) + ')',
+	    fillOpacity: 0.8,
+	    map: map,
+	    center: zone.latLong,
+	    radius: 500
+	  };
+	  var circ = new google.maps.Circle(options);
+	  zone.ui = {
+			  'circle' : circ
+	  };
+}
 var openInfoWindow = null;
