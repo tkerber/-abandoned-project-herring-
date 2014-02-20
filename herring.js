@@ -1,27 +1,19 @@
-
+//DEBUG boolean, should debug console prints be shown
 var DEBUG = true;
 
-
 //boolean values as objects so that they are mutable form inside the button listener
-var showingPreSchools = {value: false};
 var showingPrimarySchools = {value: false};
 var showingSecondarySchools = {value: true};
 
-//TODO make redraw hide and show objects rather than re-calling the database.
 function redraw() {
   clean(); //remove everything
   
   if(DEBUG) {
-	console.log("Showing Pre-Schools: " + showingPreSchools.value);
 	console.log("Showing Primary Schools: " + showingPrimarySchools.value);
 	console.log("Showing Secondary Schools: " + showingSecondarySchools.value);
   }
-  
-  if(showingPreSchools.value) { //if supposed to be drawing; draw.
-    draw("pre-school");
-  }
-  
-  if(showingPrimarySchools.value) {
+
+  if(showingPrimarySchools.value) { //if supposed to be drawing; draw.
     draw("primary");
   }
   
@@ -30,7 +22,9 @@ function redraw() {
   }
 }
 
-function draw(type){
+//draw all schools of the given type
+//types "secondary", "primary"
+function draw(type) {
   var prefix = "http://data.opendatascotland.org/def/concept/education/stages-of-education/";
   for(var key in schools){
     if(schools[key].type == prefix + type){
@@ -51,15 +45,11 @@ function clean() {
   }
 }
 
-function drawZone(map, zoneLatLong){
-  drawPoint //what this? //
-}
-
-var map;
+var map; //holds the map
 
 var mapStyles = [ { "featureType": "poi", "stylers": [ { "weight": 1.9 }, { "visibility": "off" } ] },{ "featureType": "poi.school", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.man_made", "stylers": [ { "visibility": "on" } ] },{ "featureType": "landscape.natural", "stylers": [ { "visibility": "off" } ] } ] ;
 
-
+//called on load
 function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064, -3.729858); //The centre of Scotland
   var mapOptions = {
@@ -72,17 +62,16 @@ function initialize() {
   }
   
   var mapDiv = document.getElementById('map-canvas');
-  map = new google.maps.Map(mapDiv, mapOptions);
+  map = new google.maps.Map(mapDiv, mapOptions); //create the map
 
-  map.setOptions({styles : mapStyles})
+  map.setOptions({styles : mapStyles});
   
-  var defStyle = [{}]
+  var defStyle = [{}];
  
   var styledMap = new google.maps.StyledMapType(defStyle, {name: "Default"});
   map.mapTypes.set('map_style', styledMap);
   map.setMapTypeId('map_style');
 
-  button(" Pre-", showingPreSchools);
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
@@ -92,7 +81,8 @@ function initialize() {
       schools[key].conns[i].draw();
     }
   }
-  redraw();
+  
+  redraw(); //draw all schools
 }
 
 function button(type, bool) {
@@ -102,12 +92,14 @@ function button(type, bool) {
 }
 
 function buttonControl(controlDiv, type, bool) {
+  //button names and colours
   var startDrawing = "Show" + type + "Schools";
   var stopDrawing = "Hide" + type + "Schools";
   var info = "Toggle" + type + "Schools";
   var showColor = "green";
   var hideColor = "red";
   
+  //setting the visual variables -->
   controlDiv.style.padding = '5px';
 
   var controlUI = document.createElement('div');
@@ -127,7 +119,8 @@ function buttonControl(controlDiv, type, bool) {
   controlText.style.paddingRight = '4px';
   controlText.innerHTML = bool.value ? stopDrawing : startDrawing;
   controlUI.appendChild(controlText);
-
+  // <--
+  
   google.maps.event.addDomListener(controlUI, 'click', function() {
 	bool.value = !bool.value; //toggle the drawing state
 	
@@ -143,4 +136,3 @@ function buttonControl(controlDiv, type, bool) {
 }
 
 var openInfoWindow = null;
-
