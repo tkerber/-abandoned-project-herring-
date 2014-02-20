@@ -258,7 +258,6 @@ function drawZone(zone, rank) {
 	    center: zone.latLong,
 	    radius: 100
 	  };
-	  console.log(strokeColor) ;
 	  var circ = new google.maps.Circle(options);
 	  zone.ui = {
 			  'circle' : circ
@@ -277,6 +276,6 @@ function rgbByRank(rank) {
 		green = 255 ;
 		red = 2*Math.floor(255 - 255*(rank/numZones)) ;
 	}
-	return ('rbg(' + red + ',' + green + ',' + blue + ')') ;
+	return ('rgb(' + red + ',' + green + ',' + blue + ')') ;
 }
 var openInfoWindow = null;
