@@ -15,19 +15,19 @@
 		margin-left: 5px;
         border: 1px solid transparent;
         border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
         height: 32px;
         outline: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-
-        //height: 100%;
-        //margin: 0px;
-        //padding: 0px;
-	    //background: white url(http://google-web-toolkit.googlecode.com/svn-history/r8457/trunk/user/src/com/google/gwt/cell/client/loading.gif) no-repeat 50% 50%;
       }
 
-      #pac-input {
+	  #map-canvas {
+	    height: 100%;
+        margin: 0px;
+        padding: 0px;
+	  	background: white url(http://google-web-toolkit.googlecode.com/svn-history/r8457/trunk/user/src/com/google/gwt/cell/client/loading.gif) no-repeat 50% 50%;
+	  }
+	  
+      #pac-input, #textBox {
         background-color: #fff;
         padding: 0 11px 0 13px;
         width: 400px;
@@ -36,7 +36,7 @@
         font-weight: 300;
         text-overflow: ellipsis;
       }
-
+	  
       #pac-input:focus {
         border-color: #4d90fe;
         margin-left: 5px;
@@ -58,6 +58,50 @@
         font-size: 13px;
         font-weight: 300;
       }
+	  
+	  #button {
+	    width: 160px;
+		border-style: solid;
+        border-width: 1px;
+        cursor: pointer;
+        text-align: center;
+		margin-right: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        outline: none;
+	  }
+	  
+	  #buttonText {
+	    font-family: Roboto;
+        font-size: 13px;
+        padding-left : 4px;
+        padding-right : 4px;
+        cursor: pointer;
+	  }
+
+	  #text {
+        cursor: pointer;
+	  }
+	  
+	  #textBox {
+        cursor: pointer;
+	    width: 140px;
+	    margin-top: 5px;
+		margin-right: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        outline: none;
+	  }
+	  
+	  #boxCross {
+        cursor: pointer;
+		position:absolute;
+		top:-18px;
+        right:6px;
+        z-index:-1;
+	  }
+	  
+	  #holder {
+	    visibility: hidden;
+	  }
     </style>
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
@@ -68,6 +112,14 @@
   </head>
   <body>
     <div id="map-canvas"></div>
-	<input id="pac-input" class="controls" type="text" placeholder="Search Box"></input>
+	<input id="pac-input" class="controls" type="text" placeholder="Search..."></input>
+	<div id='holder'>
+	  <p id='boxCross'>x</P>
+	 <div id="textBox">
+	    <p id="text"></p>
+	 </div>
+	  <div id='buttonText'></div>
+	 <div id='button'></div>
+    </div>
   </body>
 </html>
