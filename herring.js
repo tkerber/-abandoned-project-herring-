@@ -108,6 +108,20 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
+  var deprivationTypes = {
+    'crime': 'crime',
+    'education': 'education',
+    'employment': 'employment',
+    'geographicAccess': 'geographic access',
+    'health': 'health',
+    'housing': 'housing',
+    'income': 'incode',
+    'overall': 'overall'
+  };
+  for(var key in deprivationTypes){
+    deprivationButtons.push(new DeprivationButton(key, deprivationTypes[key]));
+  }
+
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
@@ -118,7 +132,7 @@ function initialize() {
     numZones++;
   
   redraw(); //draw all schools
-  drawZones("education");
+  setDeprivationType("education");
 }
   
 function searchBar() {
@@ -162,8 +176,10 @@ function searchBar() {
 	  bounds.extend(place.geometry.location);
     }
 
+
     map.fitBounds(bounds);
   });
+
 
   //Bias the SearchBox results towards places that are within the bounds of the current map's viewport.
   google.maps.event.addListener(map, 'bounds_changed', function() {
@@ -171,6 +187,57 @@ function searchBar() {
 											  new google.maps.LatLng(55.788929, 0.780029));
     searchBox.setBounds(bounds);
   });
+}
+
+var deprivationButtons = []
+
+function DeprivationButton(type, name){
+  var controlDiv = document.createElement('div');
+  
+  this.selected = false;
+  this.type = type;
+  //setting the visual variables -->
+  controlDiv.style.padding = '5px';
+
+  var controlUI = document.createElement('div');
+  controlUI.style.width = '160px';
+  controlUI.style.borderStyle = 'solid';
+  controlUI.style.borderWidth = '1px';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.textAlign = 'center';
+  controlDiv.appendChild(controlUI);
+
+  this.ui = controlUI;
+  var controlText = document.createElement('div');
+  controlText.style.fontFamily = 'Arial,sans-serif';
+  controlText.style.fontSize = '12px';
+  controlText.style.paddingLeft = '4px';
+  controlText.style.paddingRight = '4px';
+  controlText.innerHTML = "Show " + name + " deprivation";
+  controlUI.appendChild(controlText);
+  
+  var this_ = this;
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+    if(this_.selected)
+      return;
+    this_.selected = !this_.selected;
+    setDeprivationType(this_.type);
+  });
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
+}
+
+function setDeprivationType(type){
+  for(var i = 0; i < deprivationButtons.length; i++){
+    if(deprivationButtons[i].type == type){
+      deprivationButtons[i].selected = true;
+      deprivationButtons[i].ui.style.backgroundColor = '#999999';
+    }
+    else{
+      deprivationButtons[i].selected = false;
+      deprivationButtons[i].ui.style.backgroundColor = '#99ff66';
+    }
+  }
+  drawZones(type);
 }
 
 function button(type, bool) {
