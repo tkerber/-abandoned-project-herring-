@@ -297,8 +297,8 @@ function buttonControl(controlDiv, type, bool) {
   var startDrawing = "Show" + type + "Schools";
   var stopDrawing = "Hide" + type + "Schools";
   var info = "Toggle" + type + "Schools";
-  var showColor = "#99FF66";
-  var hideColor = "#dddddd";
+  var showColor = "#dddddd";
+  var hideColor = "#99FF66";
   
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
