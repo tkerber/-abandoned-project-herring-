@@ -61,10 +61,10 @@ DataZone.prototype.draw = function(type){
   var rank = this[type + 'Rank'];
   var options = {
     strokeColor: rgbByRank(rank),
-    strokeOpacity: 0.8,
+    strokeOpacity: 1,
     strokeWeight: 2,
     fillColor: rgbByRank(rank),
-    fillOpacity: 0.8,
+    fillOpacity: 1,
     map: map,
     bounds : new google.maps.LatLngBounds(
     	      new google.maps.LatLng(this.latLong.lat() - 0.0005, this.latLong.lng() - 0.001 ),
