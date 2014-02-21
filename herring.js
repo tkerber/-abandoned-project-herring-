@@ -110,7 +110,6 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
-  infoBox();
   var deprivationTypes = {
     'crime': 'crime',
     'education': 'education',
@@ -121,10 +120,13 @@ function initialize() {
     'income': 'incode',
     'overall': 'overall'
   };
+  
   for(var key in deprivationTypes){
     deprivationButtons.push(new DeprivationButton(key, deprivationTypes[key]));
   }
 
+  infoBox();
+  
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
@@ -181,7 +183,6 @@ function searchBar() {
       markers.push(marker);
 	  bounds.extend(place.geometry.location);
     }
-
 
     map.fitBounds(bounds);
   });
@@ -247,21 +248,12 @@ function DeprivationButton(type, name){
   this.name = name;
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
-
-  var controlUI = document.createElement('div');
-  controlUI.style.width = '160px';
-  controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '1px';
-  controlUI.style.cursor = 'pointer';
-  controlUI.style.textAlign = 'center';
+  
+  var controlUI = document.getElementById('button').cloneNode(false);
   controlDiv.appendChild(controlUI);
-
   this.ui = controlUI;
-  var controlText = document.createElement('div');
-  controlText.style.fontFamily = 'Arial,sans-serif';
-  controlText.style.fontSize = '12px';
-  controlText.style.paddingLeft = '4px';
-  controlText.style.paddingRight = '4px';
+
+  var controlText = document.getElementById('buttonText').cloneNode(false);
   controlText.innerHTML = "Show " + name + " deprivation";
   controlUI.appendChild(controlText);
   this.textui = controlText;
