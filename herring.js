@@ -156,6 +156,7 @@ function searchBar() {
     var bounds = new google.maps.LatLngBounds();
   
     for (var i = 0, place; place = places[i]; i++) {
+	alert();
       var image = {
         url: place.icon,
         size: new google.maps.Size(71, 71),
