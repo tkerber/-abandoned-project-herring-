@@ -202,15 +202,8 @@ var helpText = "this<br>is<br>help<br>text";
 function infoBox() {
   var textBox = document.getElementById('textBox');
   var cross = document.getElementById('boxCross');
-  
-  if(showing) {
-	  textBox.innerHTML = helpText;
-	  textBox.appendChild(cross);
-	  textBox.style.width = '200px';
-	} else {
-	  textBox.innerHTML = "Click for info";
-	  textBox.style.width = '138px';
-	}
+  textBox.innerHTML = "Click for info";
+  textBox.style.width = '138px';
 	
   google.maps.event.addDomListener(textBox, 'click', function() {
 	showing = !showing;
