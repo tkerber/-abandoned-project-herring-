@@ -196,7 +196,7 @@ function searchBar() {
 }
 
 var showing = false;
-var helpText = "The map shows the schools of Scotland as blue circles, the larger the school, the larger the circle.<br>The data zones (see <a href=\"http://www.opendatascotland.org/\">opendatascotland.org</a>) that sends students to a school are connected to that school with a black line.<br>The opacity of the line scales with the number of students comming from the data zone.<br>Finaly the data zones are coloured on a green to red scale according to their Multiple Deprivation Index, red is bad, green is good.";
+var helpText = "The map shows the schools of Scotland as blue circles, the larger the school, the larger the circle.<br>The data zones (see <a href=\"http://www.opendatascotland.org/\">opendatascotland.org</a>) that send students to a school are connected to that school with a black line.<br>The opacity of the line scales with the number of students comming from the data zone.<br>Finaly the data zones are coloured on a green to red scale according to their Multiple Deprivation Index, red is bad, green is good.";
 
 function infoBox() {
   var textBox = document.getElementById('textBox');
