@@ -66,13 +66,14 @@ DataZone.prototype.draw = function(type){
     fillColor: rgbByRank(rank),
     fillOpacity: 0.8,
     map: map,
-    center: this.latLong,
-    radius: 100
+    bounds : new google.maps.LatLngBounds(
+    	      new google.maps.LatLng(this.latLong.lat() - 0.0005, this.latLong.lng() - 0.001 ),
+    	      new google.maps.LatLng(this.latLong.lat() + 0.0005, this.latLong.lng() + 0.001 ))
   };
   if(this.ui)
     this.ui.setOptions(options);
   else{
-    var circ = new google.maps.Circle(options);
+    var circ = new google.maps.Rectangle(options);
     this.ui = circ;
   }
 }
