@@ -66,27 +66,7 @@ function testZones() {
 //Accepts the arguments Overall, Crime, Education, Income, Employment, Health and Housing
 function drawZones(type) {
 	for (var key in dataZones) {
-		numZones++ ;
-	}
-	for (var key in dataZones) {
-		switch (type) {
-		case "Crime" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Education" : drawZone(dataZones[key], dataZones[key].educationRank);
-		    break;
-		case "Income" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Employment" : drawZone(dataZones[key], dataZones[key].educationRank);
-		    break;
-		case "Overall" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Health" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		case "Housing" : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		default : drawZone(dataZones[key], dataZones[key].educationRank);
-			break;
-		}
+    dataZones[key].draw(type);
 	}
 }
 
@@ -128,17 +108,17 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
-    console.log("hey");
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
       schools[key].conns[i].draw();
     }
   }
-  
+  for(var key in dataZones)
+    numZones++;
   
   redraw(); //draw all schools
-  drawZones("Education");
+  drawZones("education");
 }
   
 function searchBar() {
@@ -205,8 +185,8 @@ function buttonControl(controlDiv, type, bool) {
   var startDrawing = "Show" + type + "Schools";
   var stopDrawing = "Hide" + type + "Schools";
   var info = "Toggle" + type + "Schools";
-  var showColor = "green";
-  var hideColor = "red";
+  var showColor = "#99FF66";
+  var hideColor = "#CCCCA3";
   
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
@@ -215,7 +195,7 @@ function buttonControl(controlDiv, type, bool) {
   controlUI.style.backgroundColor = bool.value ? hideColor : showColor;
   controlUI.style.width = '160px';
   controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '2px';
+  controlUI.style.borderWidth = '1px';
   controlUI.style.cursor = 'pointer';
   controlUI.style.textAlign = 'center';
   controlUI.title = info;
@@ -248,20 +228,5 @@ function buttonControl(controlDiv, type, bool) {
 var numZones = 0
 
 //Draws a zone with a colour that scales from Green to Red depending on the rank supplied
-function drawZone(zone, rank) {
-	  var options = {
-	    strokeColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
-	    strokeOpacity: 0.8,
-	    strokeWeight: 2,
-	    fillColor: 'rgb(' + Math.round(255*(rank/numZones)) + ',' + Math.round(255 - 255*(rank/numZones)) + ',' + 0 + ')',
-	    fillOpacity: 0.8,
-	    map: map,
-	    center: zone.latLong,
-	    radius: 100
-	  };
-	  var circ = new google.maps.Circle(options);
-	  zone.ui = {
-			  'circle' : circ
-	  };
-}
+
 var openInfoWindow = null;

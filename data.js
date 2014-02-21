@@ -29,10 +29,52 @@ var dataZones = {};
 var typePrefix = "http://data.opendatascotland.org/def/concept/education/stages-of-education/";
 
 function DataZone(data){
-  this.educationRank = parseInt(data[1]);
-  this.latLong = new google.maps.LatLng(parseFloat(data[2]),
-    parseFloat(data[3]));
+  this.latLong = new google.maps.LatLng(parseFloat(data[1]),
+    parseFloat(data[2]));
+  this.crimeRank = parseInt(data[3]);
+  this.educationRank = parseInt(data[4]);
+  this.employmentRank = parseInt(data[5]);
+  this.geographicAccessRank = parseInt(data[6]);
+  this.healthRank = parseInt(data[7]);
+  this.housingRank = parseInt(data[8]);
+  this.incomeRank = parseInt(data[9]);
+  this.overallRank = parseInt(data[10]);
   this.conns = [];
+}
+
+function rgbByRank(rank) {
+	var green = 0;
+	var red = 0;
+	var blue = 0;
+	if (2*rank/numZones < 1) {
+		green = Math.floor(2*255*(rank/numZones));
+		red = 255
+	}
+	else {
+		green = 255 ;
+		red = 2*Math.floor(255 - 255*(rank/numZones)) ;
+	}
+	return ('rgb(' + red + ',' + green + ',' + blue + ')') ;
+}
+
+DataZone.prototype.draw = function(type){
+  var rank = this[type + 'Rank'];
+  var options = {
+    strokeColor: rgbByRank(rank),
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: rgbByRank(rank),
+    fillOpacity: 0.8,
+    map: map,
+    center: this.latLong,
+    radius: 100
+  };
+  if(this.ui)
+    this.ui.setOptions(options);
+  else{
+    var circ = new google.maps.Circle(options);
+    this.ui = circ;
+  }
 }
 
 function School(data){
@@ -50,10 +92,10 @@ School.prototype.draw = function(){
   if(this.ui)
     return;
   var options = {
-    strokeColor: '#FF0000',
+    strokeColor: '#0ebfe9',
     strokeOpacity: 0.8,
     strokeWeight: 2,
-    fillColor: '#FF0000',
+    fillColor: '#0ebfe9',
     fillOpacity: 0.25,
     map: map,
     center: this.latLong,
