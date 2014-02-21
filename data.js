@@ -120,6 +120,12 @@ School.prototype.draw = function(){
       openInfoWindow.close();
     }
     
+	google.maps.event.addListener(map, 'click', function() {
+   // if(openInfoWindow != null) {
+      openInfoWindow.close(); 
+	 
+  }); 
+	
     if(map.getZoom() > 8){
       openInfoWindow = this_.ui.infowindow;
       openInfoWindow.open(map);
