@@ -226,12 +226,25 @@ function infoBox() {
 }
 
 var deprivationButtons = []
+// It gets drawn, then hidden.
+var dataZonesVisible = true;
+
+function toggleDataZones(){
+  for(var key in dataZones){
+    if(dataZonesVisible)
+      dataZones[key].hide();
+    else
+      dataZones[key].show();
+  }
+  dataZonesVisible = !dataZonesVisible;
+}
 
 function DeprivationButton(type, name){
   var controlDiv = document.createElement('div');
   
   this.selected = false;
   this.type = type;
+  this.name = name;
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
 
@@ -251,13 +264,25 @@ function DeprivationButton(type, name){
   controlText.style.paddingRight = '4px';
   controlText.innerHTML = "Show " + name + " deprivation";
   controlUI.appendChild(controlText);
+  this.textui = controlText;
   
   var this_ = this;
   google.maps.event.addDomListener(controlUI, 'click', function() {
-    if(this_.selected)
-      return;
-    this_.selected = !this_.selected;
-    setDeprivationType(this_.type);
+    if(this_.selected){
+      toggleDataZones();
+      if(dataZonesVisible){
+        this_.textui.innerHTML = "Hide " + this_.name + " deprivation";
+        this_.ui.style.backgroundColor = '#99ff66';
+      }
+      else{
+        this_.textui.innerHTML = "Show " + this_.name + " deprivation";
+        this_.ui.style.backgroundColor = '#dddddd';
+      }
+    }
+    else{
+      this_.selected = !this_.selected;
+      setDeprivationType(this_.type);
+    }
   });
   map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
 }
@@ -265,15 +290,21 @@ function DeprivationButton(type, name){
 function setDeprivationType(type){
   for(var i = 0; i < deprivationButtons.length; i++){
     if(deprivationButtons[i].type == type){
+      deprivationButtons[i].textui.innerHTML = "Hide " +
+        deprivationButtons[i].name + " deprivation";
       deprivationButtons[i].selected = true;
-      deprivationButtons[i].ui.style.backgroundColor = '#999999';
+      deprivationButtons[i].ui.style.backgroundColor = '#99ff66';
     }
     else{
+      deprivationButtons[i].textui.innerHTML = "Show " +
+        deprivationButtons[i].name + " deprivation";
       deprivationButtons[i].selected = false;
-      deprivationButtons[i].ui.style.backgroundColor = '#99ff66';
+      deprivationButtons[i].ui.style.backgroundColor = '#dddddd';
     }
   }
   drawZones(type);
+  if(!dataZonesVisible)
+    toggleDataZones();
 }
 
 function button(type, bool) {
@@ -288,7 +319,7 @@ function buttonControl(controlDiv, type, bool) {
   var stopDrawing = "Hide" + type + "Schools";
   var info = "Toggle" + type + "Schools";
   var showColor = "#99FF66";
-  var hideColor = "#CCCCA3";
+  var hideColor = "#dddddd";
   
   //setting the visual variables -->
   controlDiv.style.padding = '5px';

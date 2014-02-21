@@ -78,6 +78,14 @@ DataZone.prototype.draw = function(type){
   }
 }
 
+DataZone.prototype.hide = function(){
+  this.ui.setVisible(false);
+}
+
+DataZone.prototype.show = function(){
+  this.ui.setVisible(true);
+}
+
 function School(data){
   this.email = data[0];
   this.name = data[4];
