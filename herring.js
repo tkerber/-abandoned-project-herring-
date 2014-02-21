@@ -162,7 +162,6 @@ function searchBar() {
     var bounds = new google.maps.LatLngBounds();
   
     for (var i = 0, place; place = places[i]; i++) {
-	alert();
       var image = {
         url: place.icon,
         size: new google.maps.Size(71, 71),
@@ -171,15 +170,6 @@ function searchBar() {
         scaledSize: new google.maps.Size(25, 25)
       };
 
-      // Create a marker for each place.
-      var marker = new google.maps.Marker({
-        map: map,
-        icon: image,
-        title: place.name,
-        position: place.geometry.location
-      }); 
-
-      markers.push(marker);
 	  bounds.extend(place.geometry.location);
     }
 
