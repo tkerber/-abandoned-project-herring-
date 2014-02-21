@@ -3,7 +3,7 @@ var DEBUG = true;
 
 //boolean values as objects so that they are mutable form inside the button listener
 var showingPrimarySchools = {value: false};
-var showingSecondarySchools = {value: false};
+var showingSecondarySchools = {value: true};
 
 function redraw() {
   clean(); //remove everything
@@ -117,7 +117,7 @@ function initialize() {
     'geographicAccess': 'geographic access',
     'health': 'health',
     'housing': 'housing',
-    'income': 'incode',
+    'income': 'income',
     'overall': 'overall'
   };
   
@@ -138,8 +138,7 @@ function initialize() {
   }
   
   redraw(); //draw all schools
-  drawZones("education");
-  setDeprivationType("education");
+  setDeprivationType("education", false);
 }
   
 function searchBar() {
@@ -197,7 +196,7 @@ function searchBar() {
 }
 
 var showing = false;
-var helpText = "this<br>is<br>help<br>text";
+var helpText = "The map shows the schools of Scotland as blue circles, the larger the school, the larger the circle.<br>The data zones (see <a href=\"http://www.opendatascotland.org/\">opendatascotland.org</a>) that sends students to a school are connected to that school with a black line.<br>The opacity of the line scales with the number of students comming from the data zone.<br>Finaly the data zones are coloured on a green to red scale according to their Multiple Deprivation Index, red is bad, green is good.";
 
 function infoBox() {
   var textBox = document.getElementById('textBox');
@@ -210,7 +209,7 @@ function infoBox() {
     if(showing) {
 	  textBox.innerHTML = helpText;
 	  textBox.appendChild(cross);
-	  textBox.style.width = '200px';
+	  textBox.style.width = '280px';
 	} else {
 	  textBox.innerHTML = "Click for info";
 	  textBox.style.width = '138px';
@@ -220,6 +219,7 @@ function infoBox() {
 }
 
 var deprivationButtons = []
+var currentDeprivation;
 // It gets drawn, then hidden.
 var dataZonesVisible = true;
 
@@ -254,41 +254,35 @@ function DeprivationButton(type, name){
   var this_ = this;
   google.maps.event.addDomListener(controlUI, 'click', function() {
     if(this_.selected){
-      toggleDataZones();
-      if(dataZonesVisible){
-        this_.textui.innerHTML = "Hide " + this_.name + " deprivation";
-        this_.ui.style.backgroundColor = '#99ff66';
-      }
-      else{
-        this_.textui.innerHTML = "Show " + this_.name + " deprivation";
-        this_.ui.style.backgroundColor = '#dddddd';
-      }
+      setDeprivationType(this_.type, !dataZonesVisible);
     }
     else{
       this_.selected = !this_.selected;
-      setDeprivationType(this_.type);
+      setDeprivationType(this_.type, true);
     }
   });
   map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
 }
 
-function setDeprivationType(type){
-  for(var i = 0; i < deprivationButtons.length; i++){
-    if(deprivationButtons[i].type == type){
-      deprivationButtons[i].textui.innerHTML = "Hide " +
-        deprivationButtons[i].name + " deprivation";
-      deprivationButtons[i].selected = true;
-      deprivationButtons[i].ui.style.backgroundColor = '#99ff66';
+function setDeprivationType(type, visible){
+  if(type != currentDeprivation){
+    for(var i = 0; i < deprivationButtons.length; i++){
+      if(deprivationButtons[i].type == type && visible){
+        deprivationButtons[i].textui.innerHTML = "Hide " +
+          deprivationButtons[i].name + " deprivation";
+        deprivationButtons[i].selected = true;
+        deprivationButtons[i].ui.style.backgroundColor = '#99ff66';
+      }
+      else{
+        deprivationButtons[i].textui.innerHTML = "Show " +
+          deprivationButtons[i].name + " deprivation";
+        deprivationButtons[i].selected = false;
+        deprivationButtons[i].ui.style.backgroundColor = '#dddddd';
+      }
     }
-    else{
-      deprivationButtons[i].textui.innerHTML = "Show " +
-        deprivationButtons[i].name + " deprivation";
-      deprivationButtons[i].selected = false;
-      deprivationButtons[i].ui.style.backgroundColor = '#dddddd';
-    }
+    drawZones(type);
   }
-  drawZones(type);
-  if(!dataZonesVisible)
+  if(dataZonesVisible != visible)
     toggleDataZones();
 }
 
