@@ -117,7 +117,7 @@ function initialize() {
     'geographicAccess': 'geographic access',
     'health': 'health',
     'housing': 'housing',
-    'income': 'incode',
+    'income': 'income',
     'overall': 'overall'
   };
   
@@ -196,27 +196,20 @@ function searchBar() {
 }
 
 var showing = false;
-var helpText = "this<br>is<br>help<br>text";
+var helpText = "The map shows the schools of Scotland as blue circles, the larger the school, the larger the circle.<br>The data zones (see <a href=\"http://www.opendatascotland.org/\">opendatascotland.org</a>) that sends students to a school are connected to that school with a black line.<br>The opacity of the line scales with the number of students comming from the data zone.<br>Finaly the data zones are coloured on a green to red scale according to their Multiple Deprivation Index, red is bad, green is good.";
 
 function infoBox() {
   var textBox = document.getElementById('textBox');
   var cross = document.getElementById('boxCross');
-  
-  if(showing) {
-	  textBox.innerHTML = helpText;
-	  textBox.appendChild(cross);
-	  textBox.style.width = '200px';
-	} else {
 	  textBox.innerHTML = "Click for info";
 	  textBox.style.width = '138px';
-	}
 	
   google.maps.event.addDomListener(textBox, 'click', function() {
 	showing = !showing;
     if(showing) {
 	  textBox.innerHTML = helpText;
 	  textBox.appendChild(cross);
-	  textBox.style.width = '200px';
+	  textBox.style.width = '280px';
 	} else {
 	  textBox.innerHTML = "Click for info";
 	  textBox.style.width = '138px';
