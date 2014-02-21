@@ -3,7 +3,7 @@ var DEBUG = true;
 
 //boolean values as objects so that they are mutable form inside the button listener
 var showingPrimarySchools = {value: false};
-var showingSecondarySchools = {value: true};
+var showingSecondarySchools = {value: false};
 
 function redraw() {
   clean(); //remove everything
@@ -79,9 +79,11 @@ function initialize() {
   var centerLatlng = new google.maps.LatLng(56.632064, -3.729858); //The centre of Scotland
   var mapOptions = {
     zoom: 7,
-	disableDefaultUI: true,
     center: centerLatlng ,
-	disableDefaultUI:true,
+	disableDefaultUI: true,
+    panControl: false,
+    zoomControl: true,
+    scaleControl: false,
     mapTypeControlOptions: {
         mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
       }
@@ -108,6 +110,8 @@ function initialize() {
   button(" Primary ", showingPrimarySchools);
   button(" Secondary ", showingSecondarySchools);
 
+  infoBox();
+  /*
   for(var key in schools){
     schools[key].draw();
     for(var i = 0; i < schools[key].conns.length; i++){
@@ -119,6 +123,7 @@ function initialize() {
   
   redraw(); //draw all schools
   drawZones("education");
+  */
 }
   
 function searchBar() {
@@ -173,10 +178,40 @@ function searchBar() {
   });
 }
 
+var showing = false;
+var helpText = "this<br>is<br>help<br>text";
+
+function infoBox() {
+  var textBox = document.getElementById('textBox');
+  var cross = document.getElementById('boxCross');
+  
+  if(showing) {
+	  textBox.innerHTML = helpText;
+	  textBox.appendChild(cross);
+	  textBox.style.width = '200px';
+	} else {
+	  textBox.innerHTML = "Click for info";
+	  textBox.style.width = '138px';
+	}
+	
+  google.maps.event.addDomListener(textBox, 'click', function() {
+	showing = !showing;
+    if(showing) {
+	  textBox.innerHTML = helpText;
+	  textBox.appendChild(cross);
+	  textBox.style.width = '200px';
+	} else {
+	  textBox.innerHTML = "Click for info";
+	  textBox.style.width = '138px';
+	}
+  });
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(textBox);
+}
+
 function button(type, bool) {
   var homeControlDiv = document.createElement('div');
   var bc = new buttonControl(homeControlDiv, type, bool);
-  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(homeControlDiv);  
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(homeControlDiv);
 }
 
 function buttonControl(controlDiv, type, bool) {
@@ -190,24 +225,14 @@ function buttonControl(controlDiv, type, bool) {
   //setting the visual variables -->
   controlDiv.style.padding = '5px';
 
-  var controlUI = document.createElement('div');
+  var controlUI = document.getElementById('button').cloneNode(false);
   controlUI.style.backgroundColor = bool.value ? hideColor : showColor;
-  controlUI.style.width = '160px';
-  controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '1px';
-  controlUI.style.cursor = 'pointer';
-  controlUI.style.textAlign = 'center';
   controlUI.title = info;
   controlDiv.appendChild(controlUI);
-
-  var controlText = document.createElement('div');
-  controlText.style.fontFamily = 'Arial,sans-serif';
-  controlText.style.fontSize = '12px';
-  controlText.style.paddingLeft = '4px';
-  controlText.style.paddingRight = '4px';
+  
+  var controlText = document.getElementById('buttonText').cloneNode(false);
   controlText.innerHTML = bool.value ? stopDrawing : startDrawing;
   controlUI.appendChild(controlText);
-  // <--
   
   google.maps.event.addDomListener(controlUI, 'click', function() {
 	bool.value = !bool.value; //toggle the drawing state
